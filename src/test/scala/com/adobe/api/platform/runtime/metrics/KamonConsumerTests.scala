@@ -1,14 +1,19 @@
 /*
-Copyright 2018 Adobe. All rights reserved.
-This file is licensed to you under the Apache License, Version 2.0 (the "License");
-you may not use this file except in compliance with the License. You may obtain a copy
-of the License at http://www.apache.org/licenses/LICENSE-2.0
-
-Unless required by applicable law or agreed to in writing, software distributed under
-the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
-OF ANY KIND, either express or implied. See the License for the specific language
-governing permissions and limitations under the License.
-*/
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 package com.adobe.api.platform.runtime.metrics
 
@@ -56,11 +61,25 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
       createCustomTopic(KamonConsumer.userEventTopic)
       val consumer = createConsumer(actualConfig.kafkaPort)
-      publishStringMessageToKafka(KamonConsumer.userEventTopic, newActivationEvent("a1").serialize)
+      publishStringMessageToKafka(KamonConsumer.userEventTopic, newActivationEvent("whisk.system/apimgmt/createApi").serialize)
+
       sleep(sleepAfterProduce, "sleeping post produce")
       consumer.shutdown().futureValue
       sleep(1.second, "sleeping for Kamon reporters to get invoked")
-      TestReporter.counter("activations").get.value shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.value shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "whisk.system").size shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "apimgmt/createApi").size shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "nodejs:6").size shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "256").size shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "2").size shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.memory").get.distribution.count shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.waitTime").get.distribution.count shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.initTime").get.distribution.count shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.duration").get.distribution.count shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "whisk.system").size shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "apimgmt/createApi").size shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "nodejs:6").size shouldBe 1
+      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "256").size shouldBe 1
     }
   }
 
@@ -71,10 +90,10 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     KamonConsumer(settings)
   }
 
-  private def newActivationEvent(name: String, kind: String = "nodejs") =
+  private def newActivationEvent(name: String, kind: String = "nodejs:6") =
     EventMessage(
       "test",
-      Activation(name, 200, 3, 7, 11, kind, false, 256, None),
+      Activation(name, 2, 3, 7, 11, kind, false, 256, None),
       "testuser",
       "testNS",
       "test",
@@ -96,6 +115,10 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
 
     def counter(name: String) = {
       snapshotAccumulator.peek().metrics.counters.find(_.name == name)
+    }
+
+    def histogram(name: String) = {
+      snapshotAccumulator.peek().metrics.histograms.find(_.name == name)
     }
   }
 }
