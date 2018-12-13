@@ -1,6 +1,6 @@
 # OpenWhisk User Events
 
-This service connects to `events` topic and publishes the events to to various services like Prometheus, Datadog etc via 
+This service connects to `events` topic and publishes the events to various services like Prometheus, Datadog etc via 
 Kamon. Refer to [user specific metrics][1] on how to enable them
 
 ## Build
