@@ -15,11 +15,13 @@ plugins {
     id 'application'
     id "org.scoverage" version "2.5.0"
     id "com.gradle.build-scan" version "1.14"
+    id "cz.alenkacz.gradle.scalafmt" version "1.5.1"
 }
 
 
 group 'com.adobe.api.platform.runtime'
 version '1.0-SNAPSHOT'
+scalafmt.configFilePath = gradle.scalafmt.config
 
 sourceCompatibility = 1.8
 
