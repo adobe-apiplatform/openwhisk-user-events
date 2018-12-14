@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one or more
 # contributor license agreements.  See the NOTICE file distributed with
@@ -15,9 +16,15 @@
 # limitations under the License.
 #
 
-sudo: required
+set -e
 
-services: docker
+# Build script for Travis-CI.
 
-script:
-  - ./tools/travis/build.sh
+SECONDS=0
+SCRIPTDIR=$(cd $(dirname "$0") && pwd)
+ROOTDIR="$SCRIPTDIR/../.."
+
+./gradlew --console=plain --scan reportScoverage
+
+bash <(curl -s https://codecov.io/bash)
+echo "Time taken for ${0##*/} is $SECONDS secs"
