@@ -13,6 +13,7 @@ governing permissions and limitations under the License.
 package com.adobe.api.platform.runtime.metrics
 
 import akka.actor.{ActorSystem, CoordinatedShutdown}
+import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
@@ -25,19 +26,23 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 
 import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, Future}
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
-object OpenWhiskEvents {
+object OpenWhiskEvents extends SLF4JLogging {
 
   def main(args: Array[String]): Unit = {
     Kamon.addReporter(new PrometheusReporter())
-    implicit val system = ActorSystem("runtime-actor-system")
-    implicit val materializer = ActorMaterializer()
-
+    implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
+    implicit val materializer: ActorMaterializer = ActorMaterializer()
+    val port = 9096 //TODO Make port configurable
     val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
     val route = get {
       path("ping") {
-        complete("pong")
+        if (kamonConsumer.isRunning) {
+          complete("pong")
+        } else {
+          complete(503 -> "Consumer not running")
+        }
       }
     }
 
@@ -45,7 +50,8 @@ object OpenWhiskEvents {
       kamonConsumer.shutdown()
     }
 
-    startHttpService(route, 9096) //TODO Make port configurable
+    startHttpService(route, port)
+    log.info(s"Started the http server on http://localhost:$port")
   }
 
   def eventConsumerSettings(config: Config): ConsumerSettings[String, String] =
@@ -66,7 +72,7 @@ object OpenWhiskEvents {
 
   private def addShutdownHook(binding: Future[Http.ServerBinding])(implicit actorSystem: ActorSystem,
                                                                    materializer: ActorMaterializer): Unit = {
-    implicit val executionContext = actorSystem.dispatcher
+    implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
     sys.addShutdownHook {
       Await.result(binding.map(_.unbind()), 30.seconds)
       Await.result(actorSystem.whenTerminated, 30.seconds)

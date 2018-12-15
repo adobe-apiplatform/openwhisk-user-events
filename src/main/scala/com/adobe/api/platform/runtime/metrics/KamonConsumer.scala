@@ -33,6 +33,8 @@ case class KamonConsumer(settings: ConsumerSettings[String, String])(implicit sy
     control.drainAndShutdown()(system.dispatcher)
   }
 
+  def isRunning: Boolean = !control.isShutdown.isCompleted
+
   //TODO Use RestartSource
   private val control: DrainingControl[Done] = Consumer
     .committableSource(settings, Subscriptions.topics(userEventTopic))
@@ -45,6 +47,7 @@ case class KamonConsumer(settings: ConsumerSettings[String, String])(implicit sy
     .toMat(Sink.ignore)(Keep.both)
     .mapMaterializedValue(DrainingControl.apply)
     .run()
+
 }
 
 object KamonConsumer {
