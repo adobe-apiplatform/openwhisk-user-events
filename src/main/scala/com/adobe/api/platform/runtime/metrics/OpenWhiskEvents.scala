@@ -13,6 +13,9 @@ governing permissions and limitations under the License.
 package com.adobe.api.platform.runtime.metrics
 
 import akka.actor.{ActorSystem, CoordinatedShutdown}
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server.Route
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -20,6 +23,9 @@ import kamon.Kamon
 import kamon.prometheus.PrometheusReporter
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
+
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.{Await, Future}
 
 object OpenWhiskEvents {
 
@@ -29,10 +35,17 @@ object OpenWhiskEvents {
     implicit val materializer = ActorMaterializer()
 
     val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
+    val route = get {
+      path("ping") {
+        complete("pong")
+      }
+    }
 
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()
     }
+
+    startHttpService(route, 9096) //TODO Make port configurable
   }
 
   def eventConsumerSettings(config: Config): ConsumerSettings[String, String] =
@@ -40,6 +53,24 @@ object OpenWhiskEvents {
       .withGroupId("kamon")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
-  def defaultConsumerConfig(system: ActorSystem) = system.settings.config.getConfig("akka.kafka.consumer")
+  def defaultConsumerConfig(system: ActorSystem): Config = system.settings.config.getConfig("akka.kafka.consumer")
+
+  /**
+   * Starts an HTTP(S) route handler on given port and registers a shutdown hook.
+   */
+  private def startHttpService(route: Route, port: Int)(implicit actorSystem: ActorSystem,
+                                                        materializer: ActorMaterializer): Unit = {
+    val httpBinding = Http().bindAndHandle(route, "0.0.0.0", port)
+    addShutdownHook(httpBinding)
+  }
+
+  private def addShutdownHook(binding: Future[Http.ServerBinding])(implicit actorSystem: ActorSystem,
+                                                                   materializer: ActorMaterializer): Unit = {
+    implicit val executionContext = actorSystem.dispatcher
+    sys.addShutdownHook {
+      Await.result(binding.map(_.unbind()), 30.seconds)
+      Await.result(actorSystem.whenTerminated, 30.seconds)
+    }
+  }
 
 }
