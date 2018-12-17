@@ -16,7 +16,6 @@ import akka.actor.{ActorSystem, CoordinatedShutdown}
 import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.ContentType
-import akka.http.scaladsl.server.Route
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -35,20 +34,26 @@ object OpenWhiskEvents extends SLF4JLogging {
   case class MetricConfig(port: Int)
 
   def main(args: Array[String]): Unit = {
-    val prometheus = new PrometheusReporter()
-    Kamon.addReporter(prometheus)
-    val metricConfig = loadConfigOrThrow[MetricConfig]("user-events")
     implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
+    val binding = start(system.settings.config)
+    addShutdownHook(binding)
+  }
+
+  def start(config: Config)(implicit system: ActorSystem,
+                            materializer: ActorMaterializer): Future[Http.ServerBinding] = {
+    val metricConfig = loadConfigOrThrow[MetricConfig](config, "user-events")
+    val prometheus = new PrometheusReporter()
+    Kamon.addReporter(prometheus)
     val port = metricConfig.port
-    val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
+    val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(config)))
     val api = new EventsApi(kamonConsumer, prometheus)
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()
     }
-
-    startHttpService(api.routes, port)
-    log.info(s"Started the http server on http://localhost:$port")
+    val httpBinding = Http().bindAndHandle(api.routes, "0.0.0.0", port)
+    httpBinding.foreach(_ => log.info(s"Started the http server on http://localhost:$port"))(system.dispatcher)
+    httpBinding
   }
 
   def eventConsumerSettings(config: Config): ConsumerSettings[String, String] =
@@ -56,16 +61,7 @@ object OpenWhiskEvents extends SLF4JLogging {
       .withGroupId("kamon")
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
-  def defaultConsumerConfig(system: ActorSystem): Config = system.settings.config.getConfig("akka.kafka.consumer")
-
-  /**
-   * Starts an HTTP(S) route handler on given port and registers a shutdown hook.
-   */
-  private def startHttpService(route: Route, port: Int)(implicit actorSystem: ActorSystem,
-                                                        materializer: ActorMaterializer): Unit = {
-    val httpBinding = Http().bindAndHandle(route, "0.0.0.0", port)
-    addShutdownHook(httpBinding)
-  }
+  def defaultConsumerConfig(globalConfig: Config): Config = globalConfig.getConfig("akka.kafka.consumer")
 
   private def addShutdownHook(binding: Future[Http.ServerBinding])(implicit actorSystem: ActorSystem,
                                                                    materializer: ActorMaterializer): Unit = {

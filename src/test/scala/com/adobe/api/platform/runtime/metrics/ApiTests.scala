@@ -11,9 +11,9 @@ governing permissions and limitations under the License.
  */
 
 package com.adobe.api.platform.runtime.metrics
-import akka.http.scaladsl.model.{HttpCharsets, HttpResponse}
 import akka.http.scaladsl.model.headers.HttpEncodings._
 import akka.http.scaladsl.model.headers.{`Accept-Encoding`, `Content-Encoding`, HttpEncoding, HttpEncodings}
+import akka.http.scaladsl.model.{HttpCharsets, HttpResponse}
 import akka.http.scaladsl.testkit.ScalatestRouteTest
 import kamon.prometheus.PrometheusReporter
 import org.junit.runner.RunWith
@@ -22,15 +22,12 @@ import org.scalatest.junit.JUnitRunner
 import org.scalatest.matchers.Matcher
 import org.scalatest.{FlatSpec, Matchers}
 
-import scala.concurrent.duration.DurationInt
-
 @RunWith(classOf[JUnitRunner])
 class ApiTests extends FlatSpec with Matchers with ScalatestRouteTest with EventsTestHelper with ScalaFutures {
-  implicit val timeoutConfig = PatienceConfig(1.minute)
   behavior of "EventsApi"
 
   it should "respond ping request" in {
-    val consumer = createConsumer(56754)
+    val consumer = createConsumer(56754, system.settings.config)
     val api = new EventsApi(consumer, new PrometheusReporter)
     Get("/ping") ~> api.routes ~> check {
       //Due to retries using a random port does not immediately result in failure
@@ -40,7 +37,7 @@ class ApiTests extends FlatSpec with Matchers with ScalatestRouteTest with Event
   }
 
   it should "respond metrics request" in {
-    val consumer = createConsumer(56754)
+    val consumer = createConsumer(56754, system.settings.config)
     val api = new EventsApi(consumer, new PrometheusReporter)
     Get("/metrics") ~> `Accept-Encoding`(gzip) ~> api.routes ~> check {
       contentType.charsetOption shouldBe Some(HttpCharsets.`UTF-8`)

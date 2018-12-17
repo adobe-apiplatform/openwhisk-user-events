@@ -14,6 +14,7 @@ package com.adobe.api.platform.runtime.metrics
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import scala.concurrent.duration.DurationInt
 import akka.testkit.TestKit
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
@@ -34,6 +35,7 @@ abstract class KafkaSpecBase
     with Eventually
     with EventsTestHelper { this: Suite =>
   val log: Logger = LoggerFactory.getLogger(getClass)
+  implicit val timeoutConfig = PatienceConfig(1.minute)
 
   implicit val materializer = ActorMaterializer()
 
