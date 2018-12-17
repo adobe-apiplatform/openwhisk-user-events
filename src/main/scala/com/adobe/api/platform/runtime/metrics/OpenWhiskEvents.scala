@@ -20,6 +20,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.{ContentType, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.http.scaladsl.model.StatusCodes.ServiceUnavailable
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -47,7 +48,7 @@ object OpenWhiskEvents extends SLF4JLogging {
         if (kamonConsumer.isRunning) {
           complete("pong")
         } else {
-          complete(503 -> "Consumer not running")
+          complete(ServiceUnavailable -> "Consumer not running")
         }
       } ~ path("metrics") {
         encodeResponse {
