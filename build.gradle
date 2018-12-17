@@ -89,7 +89,7 @@ tasks.withType(ScalaCompile) {
 }
 
 
-mainClassName = 'com.adobe.api.platform.runtime.metrics.OpenWhiskEvents'
+mainClassName = 'com.adobe.api.platform.runtime.metrics.Main'
 
 //Ensure that dist archive name does not contain version
 distTar {

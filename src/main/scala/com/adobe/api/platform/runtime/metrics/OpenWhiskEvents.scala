@@ -25,20 +25,12 @@ import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import pureconfig.loadConfigOrThrow
 
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
   val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
   case class MetricConfig(port: Int)
-
-  def main(args: Array[String]): Unit = {
-    implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
-    implicit val materializer: ActorMaterializer = ActorMaterializer()
-    val binding = start(system.settings.config)
-    addShutdownHook(binding)
-  }
 
   def start(config: Config)(implicit system: ActorSystem,
                             materializer: ActorMaterializer): Future[Http.ServerBinding] = {
@@ -62,14 +54,5 @@ object OpenWhiskEvents extends SLF4JLogging {
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   def defaultConsumerConfig(globalConfig: Config): Config = globalConfig.getConfig("akka.kafka.consumer")
-
-  private def addShutdownHook(binding: Future[Http.ServerBinding])(implicit actorSystem: ActorSystem,
-                                                                   materializer: ActorMaterializer): Unit = {
-    implicit val ec: ExecutionContextExecutor = actorSystem.dispatcher
-    sys.addShutdownHook {
-      Await.result(binding.map(_.unbind()), 30.seconds)
-      Await.result(actorSystem.whenTerminated, 30.seconds)
-    }
-  }
 
 }
