@@ -12,15 +12,11 @@ governing permissions and limitations under the License.
 
 package com.adobe.api.platform.runtime.metrics
 
-import java.nio.charset.StandardCharsets.UTF_8
-
 import akka.actor.{ActorSystem, CoordinatedShutdown}
 import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentType, HttpEntity}
-import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.model.ContentType
 import akka.http.scaladsl.server.Route
-import akka.http.scaladsl.model.StatusCodes.ServiceUnavailable
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -46,25 +42,12 @@ object OpenWhiskEvents extends SLF4JLogging {
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     val port = metricConfig.port
     val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
-    val route = get {
-      path("ping") {
-        if (kamonConsumer.isRunning) {
-          complete("pong")
-        } else {
-          complete(ServiceUnavailable -> "Consumer not running")
-        }
-      } ~ path("metrics") {
-        encodeResponse {
-          complete(HttpEntity(textV4, prometheus.scrapeData().getBytes(UTF_8)))
-        }
-      }
-    }
-
+    val api = new EventsApi(kamonConsumer, prometheus)
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()
     }
 
-    startHttpService(route, port)
+    startHttpService(api.routes, port)
     log.info(s"Started the http server on http://localhost:$port")
   }
 
