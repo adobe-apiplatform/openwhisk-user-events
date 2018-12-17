@@ -41,7 +41,7 @@ object OpenWhiskEvents extends SLF4JLogging {
 
     implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-    val port = 9096 //TODO Make port configurable
+    val port = 9095 //TODO Make port configurable
     val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
     val route = get {
       path("ping") {
