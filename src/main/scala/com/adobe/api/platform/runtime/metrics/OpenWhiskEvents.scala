@@ -37,7 +37,7 @@ object OpenWhiskEvents extends SLF4JLogging {
   def main(args: Array[String]): Unit = {
     val prometheus = new PrometheusReporter()
     Kamon.addReporter(prometheus)
-    val metricConfig = loadConfigOrThrow[MetricConfig]("user-metrics")
+    val metricConfig = loadConfigOrThrow[MetricConfig]("user-events")
     implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     val port = metricConfig.port
