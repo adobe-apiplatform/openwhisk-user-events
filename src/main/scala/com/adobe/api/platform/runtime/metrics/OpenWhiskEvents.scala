@@ -12,9 +12,12 @@ governing permissions and limitations under the License.
 
 package com.adobe.api.platform.runtime.metrics
 
+import java.nio.charset.StandardCharsets.UTF_8
+
 import akka.actor.{ActorSystem, CoordinatedShutdown}
 import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{ContentType, HttpEntity}
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.kafka.ConsumerSettings
@@ -29,9 +32,12 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 
 object OpenWhiskEvents extends SLF4JLogging {
+  val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
   def main(args: Array[String]): Unit = {
-    Kamon.addReporter(new PrometheusReporter())
+    val prometheus = new PrometheusReporter()
+    Kamon.addReporter(prometheus)
+
     implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
     val port = 9096 //TODO Make port configurable
@@ -43,6 +49,8 @@ object OpenWhiskEvents extends SLF4JLogging {
         } else {
           complete(503 -> "Consumer not running")
         }
+      } ~ path("metrics") {
+        complete(HttpEntity(textV4, prometheus.scrapeData().getBytes(UTF_8)))
       }
     }
 
