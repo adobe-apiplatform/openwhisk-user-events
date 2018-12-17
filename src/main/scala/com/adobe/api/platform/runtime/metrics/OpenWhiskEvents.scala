@@ -28,6 +28,7 @@ import kamon.Kamon
 import kamon.prometheus.PrometheusReporter
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
+import pureconfig.loadConfigOrThrow
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, ExecutionContextExecutor, Future}
@@ -35,13 +36,15 @@ import scala.concurrent.{Await, ExecutionContextExecutor, Future}
 object OpenWhiskEvents extends SLF4JLogging {
   val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
+  case class MetricConfig(port: Int)
+
   def main(args: Array[String]): Unit = {
     val prometheus = new PrometheusReporter()
     Kamon.addReporter(prometheus)
-
+    val metricConfig = loadConfigOrThrow[MetricConfig]("user-metrics")
     implicit val system: ActorSystem = ActorSystem("runtime-actor-system")
     implicit val materializer: ActorMaterializer = ActorMaterializer()
-    val port = 9095 //TODO Make port configurable
+    val port = metricConfig.port
     val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(system)))
     val route = get {
       path("ping") {
