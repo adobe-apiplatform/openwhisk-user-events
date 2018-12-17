@@ -50,7 +50,9 @@ object OpenWhiskEvents extends SLF4JLogging {
           complete(503 -> "Consumer not running")
         }
       } ~ path("metrics") {
-        complete(HttpEntity(textV4, prometheus.scrapeData().getBytes(UTF_8)))
+        encodeResponse {
+          complete(HttpEntity(textV4, prometheus.scrapeData().getBytes(UTF_8)))
+        }
       }
     }
 
