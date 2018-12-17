@@ -64,13 +64,6 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     }
   }
 
-  private def createConsumer(kport: Int) = {
-    val settings = OpenWhiskEvents
-      .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(system))
-      .withBootstrapServers(s"localhost:$kport")
-    KamonConsumer(settings)
-  }
-
   private def newActivationEvent(name: String, kind: String = "nodejs") =
     EventMessage(
       "test",

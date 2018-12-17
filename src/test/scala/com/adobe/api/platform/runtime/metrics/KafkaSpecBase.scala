@@ -17,7 +17,7 @@ import akka.stream.ActorMaterializer
 import akka.testkit.TestKit
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.{FlatSpecLike, Matchers, Suite}
+import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers, Suite}
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration.FiniteDuration
@@ -30,7 +30,9 @@ abstract class KafkaSpecBase
     with FlatSpecLike
     with EmbeddedKafka
     with IntegrationPatience
-    with Eventually { this: Suite =>
+    with BeforeAndAfterAll
+    with Eventually
+    with EventsTestHelper { this: Suite =>
   val log: Logger = LoggerFactory.getLogger(getClass)
 
   implicit val materializer = ActorMaterializer()
@@ -38,5 +40,10 @@ abstract class KafkaSpecBase
   def sleep(time: FiniteDuration, msg: String = ""): Unit = {
     log.info(s"sleeping $time $msg")
     Thread.sleep(time.toMillis)
+  }
+
+  override protected def afterAll(): Unit = {
+    super.afterAll()
+    shutdown()
   }
 }
