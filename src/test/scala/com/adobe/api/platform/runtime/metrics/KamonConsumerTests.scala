@@ -67,7 +67,8 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
       TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "nodejs:6").size shouldBe 1
       TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "256").size shouldBe 1
       TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "2").size shouldBe 1
-      TestReporter.histogram("openwhisk.histogram.container.memory").get.distribution.count shouldBe 1
+      TestReporter.counter("openwhisk.counter.container.coldStarts").get.value shouldBe 0
+
       TestReporter.histogram("openwhisk.histogram.container.waitTime").get.distribution.count shouldBe 1
       TestReporter.histogram("openwhisk.histogram.container.initTime").get.distribution.count shouldBe 1
       TestReporter.histogram("openwhisk.histogram.container.duration").get.distribution.count shouldBe 1
@@ -88,7 +89,7 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
   private def newActivationEvent(name: String, kind: String = "nodejs:6") =
     EventMessage(
       "test",
-      Activation(name, 2, 3, 7, 11, kind, false, 256, None),
+      Activation(name, 2, 3, 0, 11, kind, false, 256, None),
       "testuser",
       "testNS",
       "test",

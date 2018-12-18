@@ -55,15 +55,18 @@ object KamonConsumer {
       .parse(value)
       .collect { case e if e.eventType == Activation.typeName => e } //Look for only Activations
       .foreach { e =>
-        val a = e.body.asInstanceOf[Activation]
-        val (namespace, action) = getNamespaceAction(a.name)
+      val a = e.body.asInstanceOf[Activation]
+      val (namespace, action) = getNamespaceAction(a.name)
 
-        Kamon.counter("openwhisk.counter.container.activations").refine(("namespace" -> namespace),("action" -> action),("kind" -> a.kind),("memory" -> a.memory.toString),("status" -> a.statusCode.toString)).increment()
-        Kamon.histogram("openwhisk.histogram.container.memory").refine(("namespace" -> namespace),("action" -> action),("kind" -> a.kind)).record(a.memory)
-        Kamon.histogram("openwhisk.histogram.container.waitTime", MeasurementUnit.time.milliseconds).refine(("namespace" -> namespace),("action" -> action),("kind" -> a.kind),("memory" -> a.memory.toString)).record(a.waitTime)
-        Kamon.histogram("openwhisk.histogram.container.initTime", MeasurementUnit.time.milliseconds).refine(("namespace" -> namespace),("action" -> action),("kind" -> a.kind),("memory" -> a.memory.toString)).record(a.initTime)
-        Kamon.histogram("openwhisk.histogram.container.duration", MeasurementUnit.time.milliseconds).refine(("namespace" -> namespace),("action" -> action),("kind" -> a.kind),("memory" -> a.memory.toString)).record(a.duration)
-      }
+      val tags = List(("namespace" -> namespace),("action" -> action),("kind" -> a.kind),("memory" -> a.memory.toString),("status" -> a.statusCode.toString))
+
+      Kamon.counter("openwhisk.counter.container.activations").refine(tags: _*).increment()
+      Kamon.counter("openwhisk.counter.container.coldStarts").refine(tags: _*).increment(if (a.waitTime > 0) 1L else 0L)
+
+      Kamon.histogram("openwhisk.histogram.container.waitTime", MeasurementUnit.time.milliseconds).refine(tags: _*).record(a.waitTime)
+      Kamon.histogram("openwhisk.histogram.container.initTime", MeasurementUnit.time.milliseconds).refine(tags: _*).record(a.initTime)
+      Kamon.histogram("openwhisk.histogram.container.duration", MeasurementUnit.time.milliseconds).refine(tags: _*).record(a.duration)
+    }
   }
 
   /**
