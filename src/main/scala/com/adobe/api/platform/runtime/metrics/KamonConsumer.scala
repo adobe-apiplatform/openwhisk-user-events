@@ -61,30 +61,30 @@ object KamonConsumer {
         val a = e.body.asInstanceOf[Activation]
         val (namespace, action) = getNamespaceAction(a.name)
 
-        val tags = List(
-          ("namespace" -> namespace),
-          ("action" -> action),
-          ("kind" -> a.kind),
-          ("memory" -> a.memory.toString),
-          ("status" -> a.statusCode.toString))
+        val tags = Map(
+          "namespace" -> namespace,
+          "action" -> action,
+          "kind" -> a.kind,
+          "memory" -> a.memory.toString,
+          "status" -> a.statusCode.toString)
 
-        Kamon.counter("openwhisk.counter.container.activations").refine(tags: _*).increment()
+        Kamon.counter("openwhisk.counter.container.activations").refine(tags).increment()
         Kamon
           .counter("openwhisk.counter.container.coldStarts")
-          .refine(tags: _*)
+          .refine(tags)
           .increment(if (a.waitTime > 0) 1L else 0L)
 
         Kamon
           .histogram("openwhisk.histogram.container.waitTime", MeasurementUnit.time.milliseconds)
-          .refine(tags: _*)
+          .refine(tags)
           .record(a.waitTime)
         Kamon
           .histogram("openwhisk.histogram.container.initTime", MeasurementUnit.time.milliseconds)
-          .refine(tags: _*)
+          .refine(tags)
           .record(a.initTime)
         Kamon
           .histogram("openwhisk.histogram.container.duration", MeasurementUnit.time.milliseconds)
-          .refine(tags: _*)
+          .refine(tags)
           .record(a.duration)
       }
   }
