@@ -29,7 +29,7 @@ trait EventsTestHelper {
     val settings = OpenWhiskEvents
       .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(globalConfig))
       .withBootstrapServers(s"localhost:$kport")
-    KamonConsumer(settings)
+    EventConsumer(settings)
   }
 
   protected def freePort(): Int = {

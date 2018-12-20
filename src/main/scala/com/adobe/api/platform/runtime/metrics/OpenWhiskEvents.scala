@@ -28,7 +28,7 @@ import pureconfig.loadConfigOrThrow
 import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
-  val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
+  private val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
   case class MetricConfig(port: Int)
 
@@ -38,7 +38,7 @@ object OpenWhiskEvents extends SLF4JLogging {
     val prometheus = new PrometheusReporter()
     Kamon.addReporter(prometheus)
     val port = metricConfig.port
-    val kamonConsumer = KamonConsumer(eventConsumerSettings(defaultConsumerConfig(config)))
+    val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)))
     val api = new EventsApi(kamonConsumer, prometheus)
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()

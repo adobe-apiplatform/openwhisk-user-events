@@ -25,9 +25,9 @@ import kamon.metric.MeasurementUnit
 
 import scala.concurrent.Future
 
-case class KamonConsumer(settings: ConsumerSettings[String, String])(implicit system: ActorSystem,
+case class EventConsumer(settings: ConsumerSettings[String, String])(implicit system: ActorSystem,
                                                                      materializer: ActorMaterializer) {
-  import KamonConsumer._
+  import EventConsumer._
 
   def shutdown(): Future[Done] = {
     control.drainAndShutdown()(system.dispatcher)
@@ -50,7 +50,7 @@ case class KamonConsumer(settings: ConsumerSettings[String, String])(implicit sy
 
 }
 
-object KamonConsumer {
+object EventConsumer {
   val userEventTopic = "events"
 
   private[metrics] def processEvent(value: String): Unit = {
@@ -92,13 +92,10 @@ object KamonConsumer {
   /**
    * Extract namespace and action from name
    * ex. whisk.system/apimgmt/createApi -> (whisk.system, apimgmt/createApi)
-   *
-   * @param name
-   * @return namespace, action
    */
   private def getNamespaceAction(name: String): (String, String) = {
     val nameArr = name.split("/", 2)
-    return (nameArr(0), nameArr(1))
+    (nameArr(0), nameArr(1))
   }
 
 }

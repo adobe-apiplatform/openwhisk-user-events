@@ -20,7 +20,7 @@ import akka.http.scaladsl.server.Route
 import com.adobe.api.platform.runtime.metrics.OpenWhiskEvents.textV4
 import kamon.prometheus.PrometheusReporter
 
-class EventsApi(consumer: KamonConsumer, prometheus: PrometheusReporter) {
+class EventsApi(consumer: EventConsumer, prometheus: PrometheusReporter) {
 
   val routes: Route = {
     get {

@@ -54,11 +54,11 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
   it should "push user events to kamon" in {
     val kconfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
     withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
-      createCustomTopic(KamonConsumer.userEventTopic)
+      createCustomTopic(EventConsumer.userEventTopic)
 
       val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config)
       publishStringMessageToKafka(
-        KamonConsumer.userEventTopic,
+        EventConsumer.userEventTopic,
         newActivationEvent("whisk.system/apimgmt/createApi").serialize)
 
       sleep(sleepAfterProduce, "sleeping post produce")
