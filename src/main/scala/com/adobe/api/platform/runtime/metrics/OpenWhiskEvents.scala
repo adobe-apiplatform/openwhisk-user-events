@@ -15,7 +15,6 @@ package com.adobe.api.platform.runtime.metrics
 import akka.actor.{ActorSystem, CoordinatedShutdown}
 import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.ContentType
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -28,7 +27,6 @@ import pureconfig.loadConfigOrThrow
 import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
-  private val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
   case class MetricConfig(port: Int)
 

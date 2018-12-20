@@ -13,14 +13,14 @@ governing permissions and limitations under the License.
 package com.adobe.api.platform.runtime.metrics
 import java.nio.charset.StandardCharsets.UTF_8
 
-import akka.http.scaladsl.model.HttpEntity
+import akka.http.scaladsl.model.{ContentType, HttpEntity}
 import akka.http.scaladsl.model.StatusCodes.ServiceUnavailable
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
-import com.adobe.api.platform.runtime.metrics.OpenWhiskEvents.textV4
 import kamon.prometheus.PrometheusReporter
 
 class EventsApi(consumer: EventConsumer, prometheus: PrometheusReporter) {
+  private val textV4 = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 
   val routes: Route = {
     get {
