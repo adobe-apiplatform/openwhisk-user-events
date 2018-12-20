@@ -8,7 +8,7 @@ Unless required by applicable law or agreed to in writing, software distributed 
 the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR REPRESENTATIONS
 OF ANY KIND, either express or implied. See the License for the specific language
 governing permissions and limitations under the License.
-*/
+ */
 
 package com.adobe.api.platform.runtime.metrics
 
@@ -55,7 +55,8 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     val kconfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
     withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
       createCustomTopic(KamonConsumer.userEventTopic)
-      val consumer = createConsumer(actualConfig.kafkaPort)
+
+      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config)
       publishStringMessageToKafka(KamonConsumer.userEventTopic, newActivationEvent("whisk.system/apimgmt/createApi").serialize)
 
       sleep(sleepAfterProduce, "sleeping post produce")
@@ -79,14 +80,8 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     }
   }
 
-  private def createConsumer(kport: Int) = {
-    val settings = OpenWhiskEvents
-      .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(system))
-      .withBootstrapServers(s"localhost:$kport")
-    KamonConsumer(settings)
-  }
-
   private def newActivationEvent(name: String, kind: String = "nodejs:6") =
+
     EventMessage(
       "test",
       Activation(name, 2, 3, 0, 11, kind, false, 256, None),
