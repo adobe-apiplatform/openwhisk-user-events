@@ -26,14 +26,15 @@ import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
 
-  case class MetricConfig(port: Int)
+  case class MetricConfig(port: Int, enableKamon: Boolean)
 
   def start(config: Config)(implicit system: ActorSystem,
                             materializer: ActorMaterializer): Future[Http.ServerBinding] = {
     val metricConfig = loadConfigOrThrow[MetricConfig](config, "user-events")
     val port = metricConfig.port
+    val recorders = if (metricConfig.enableKamon) Seq(PrometheusRecorder, KamonRecorder) else Seq(KamonRecorder)
     //Make KamonConsumer configurable
-    val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), Seq(PrometheusRecorder))
+    val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), recorders)
     val api = new EventsApi(kamonConsumer, PrometheusRecorder)
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()
