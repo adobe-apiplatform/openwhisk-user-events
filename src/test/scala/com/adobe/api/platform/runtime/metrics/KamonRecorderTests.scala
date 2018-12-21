@@ -27,7 +27,7 @@ import com.adobe.api.platform.runtime.metrics.MetricNames._
 import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
-class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
+class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach {
   val sleepAfterProduce: FiniteDuration = 4.seconds
   var reporterReg: Registration = _
 
@@ -57,7 +57,7 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
       createCustomTopic(EventConsumer.userEventTopic)
 
-      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config, KamonConsumer)
+      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config, KamonRecorder)
       publishStringMessageToKafka(
         EventConsumer.userEventTopic,
         newActivationEvent("whisk.system/apimgmt/createApi").serialize)

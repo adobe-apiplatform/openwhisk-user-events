@@ -24,7 +24,7 @@ import kamon.metric.MeasurementUnit
 
 import scala.collection.concurrent.TrieMap
 
-object KamonConsumer extends MetricRecorder {
+object KamonRecorder extends MetricRecorder {
   private val metrics = new TrieMap[String, KamonMetrics]
 
   def processEvent(activation: Activation): Unit = {

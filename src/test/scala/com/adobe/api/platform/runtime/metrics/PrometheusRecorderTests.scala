@@ -27,7 +27,7 @@ import org.scalatest.junit.JUnitRunner
 import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
-class PrometheusConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
+class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach {
   val sleepAfterProduce: FiniteDuration = 4.seconds
 
   behavior of "PrometheusConsumer"

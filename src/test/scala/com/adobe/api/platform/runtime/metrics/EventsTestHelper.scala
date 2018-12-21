@@ -24,7 +24,7 @@ import com.typesafe.config.Config
 
 trait EventsTestHelper {
 
-  protected def createConsumer(kport: Int, globalConfig: Config, recorder: MetricRecorder = PrometheusConsumer)(
+  protected def createConsumer(kport: Int, globalConfig: Config, recorder: MetricRecorder = PrometheusRecorder)(
     implicit system: ActorSystem,
     materializer: ActorMaterializer) = {
     val settings = OpenWhiskEvents
