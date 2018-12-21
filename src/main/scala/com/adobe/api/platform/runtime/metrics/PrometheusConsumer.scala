@@ -16,29 +16,43 @@
  */
 
 package com.adobe.api.platform.runtime.metrics
+import java.io.StringWriter
+import java.util
 import java.util.concurrent.TimeUnit
 
+import akka.http.scaladsl.model.{HttpEntity, MessageEntity}
+import akka.stream.scaladsl.Source
+import akka.util.ByteString
 import com.adobe.api.platform.runtime.metrics.Activation.getNamespaceAndActionName
 import com.adobe.api.platform.runtime.metrics.MetricNames._
-import io.prometheus.client.{Counter, Histogram}
+import io.prometheus.client.exporter.common.TextFormat
+import io.prometheus.client.{CollectorRegistry, Counter, Histogram}
 
+import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
 
-object PrometheusConsumer extends MetricRecorder {
+object PrometheusConsumer extends MetricRecorder with PrometheusExporter {
 
   private val metrics = new TrieMap[String, PrometheusMetrics]
-  private val activationCounter = counter(activationMetric, "namespace", "action")
-  private val coldStartCounter = counter(coldStartMetric, "namespace", "action")
-  private val statusCounter = counter(statusMetric, "namespace", "action", "status")
-  private val waitTimeHisto = histogram(waitTimeMetric, "namespace", "action")
-  private val initTimeHisto = histogram(initTimeMetric, "namespace", "action")
-  private val durationHisto = histogram(durationMetric, "namespace", "action")
+  private val activationCounter = counter(activationMetric, "Activation Count", "namespace", "action")
+  private val coldStartCounter = counter(coldStartMetric, "Cold start counts", "namespace", "action")
+  private val statusCounter = counter(statusMetric, "Activation failure status type", "namespace", "action", "status")
+  private val waitTimeHisto = histogram(waitTimeMetric, "Internal system hold time", "namespace", "action")
+  private val initTimeHisto =
+    histogram(initTimeMetric, "Time it took to initialize an action, e.g. docker init", "namespace", "action")
+  private val durationHisto =
+    histogram(durationMetric, "Actual time the action code was running", "namespace", "action")
+
+  private val metricSource = createSource()
 
   def processEvent(activation: Activation): Unit = {
     lookup(activation.name).record(activation)
   }
 
-  def lookup(name: String): PrometheusMetrics = {
+  override def getReport(): MessageEntity =
+    HttpEntity(PrometheusExporter.textV4, metricSource)
+
+  private def lookup(name: String): PrometheusMetrics = {
     //TODO Unregister unused actions
     metrics.getOrElseUpdate(name, {
       val (namespace, action) = getNamespaceAndActionName(name)
@@ -73,17 +87,44 @@ object PrometheusConsumer extends MetricRecorder {
 
   private def seconds(timeInMillis: Long) = TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
 
-  private def counter(name: String, tags: String*) =
+  private def counter(name: String, help: String, tags: String*) =
     Counter
       .build()
       .name(name)
+      .help(help)
       .labelNames(tags: _*)
       .register()
 
-  private def histogram(name: String, tags: String*) =
+  private def histogram(name: String, help: String, tags: String*) =
     Histogram
       .build()
       .name(name)
+      .help(help)
       .labelNames(tags: _*)
       .register()
+
+  /**
+   * Enables streaming the prometheus metric data without building the whole report in memory
+   */
+  private def createSource() =
+    Source
+      .fromIterator(() => CollectorRegistry.defaultRegistry.metricFamilySamples().asScala)
+      .map { sample =>
+        //Stream string representation of one sample at a time
+        val writer = new StringWriter()
+        TextFormat.write004(writer, singletonEnumeration(sample))
+        writer.toString
+      }
+      .map(ByteString(_))
+
+  private def singletonEnumeration[A](value: A) = new util.Enumeration[A] {
+    private var done = false
+    override def hasMoreElements: Boolean = !done
+    override def nextElement(): A = {
+      if (done) throw new NoSuchElementException
+      done = true
+      value
+    }
+  }
+
 }
