@@ -72,6 +72,8 @@ dependencies {
         exclude group: 'org.nanohttpd'
     }
     compile 'io.kamon:kamon-datadog_2.12:1.0.0'
+    compile 'io.prometheus:simpleclient:0.6.0'
+    compile 'io.prometheus:simpleclient_common:0.6.0'
 
     testCompile 'junit:junit:4.11'
     testCompile 'org.scalatest:scalatest_2.12:3.0.1'
