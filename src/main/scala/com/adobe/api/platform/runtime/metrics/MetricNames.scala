@@ -18,10 +18,10 @@
 package com.adobe.api.platform.runtime.metrics
 
 object MetricNames {
-  val activationMetric = "openwhisk.action.activations"
-  val coldStartMetric = "openwhisk.action.coldStarts"
-  val waitTimeMetric = "openwhisk.action.waitTime"
-  val initTimeMetric = "openwhisk.action.initTime"
-  val durationMetric = "openwhisk.action.duration"
-  val statusMetric = "openwhisk.action.status"
+  val activationMetric = "openwhisk_action_activations"
+  val coldStartMetric = "openwhisk_action_coldStarts"
+  val waitTimeMetric = "openwhisk_action_waitTime"
+  val initTimeMetric = "openwhisk_action_initTime"
+  val durationMetric = "openwhisk_action_duration"
+  val statusMetric = "openwhisk_action_status"
 }
