@@ -57,7 +57,7 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
     withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
       createCustomTopic(EventConsumer.userEventTopic)
 
-      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config)
+      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config, KamonConsumer)
       publishStringMessageToKafka(
         EventConsumer.userEventTopic,
         newActivationEvent("whisk.system/apimgmt/createApi").serialize)

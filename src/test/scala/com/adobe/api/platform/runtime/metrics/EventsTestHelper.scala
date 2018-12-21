@@ -24,12 +24,13 @@ import com.typesafe.config.Config
 
 trait EventsTestHelper {
 
-  protected def createConsumer(kport: Int, globalConfig: Config)(implicit system: ActorSystem,
-                                                                 materializer: ActorMaterializer) = {
+  protected def createConsumer(kport: Int, globalConfig: Config, recorder: MetricRecorder = PrometheusConsumer)(
+    implicit system: ActorSystem,
+    materializer: ActorMaterializer) = {
     val settings = OpenWhiskEvents
       .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(globalConfig))
       .withBootstrapServers(s"localhost:$kport")
-    EventConsumer(settings, Seq(KamonConsumer))
+    EventConsumer(settings, Seq(recorder))
   }
 
   protected def freePort(): Int = {
