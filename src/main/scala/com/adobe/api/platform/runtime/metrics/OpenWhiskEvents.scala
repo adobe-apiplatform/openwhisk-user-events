@@ -36,7 +36,7 @@ object OpenWhiskEvents extends SLF4JLogging {
     val prometheus = new PrometheusReporter()
     Kamon.addReporter(prometheus)
     val port = metricConfig.port
-    val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)))
+    val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), Seq(KamonConsumer))
     val api = new EventsApi(kamonConsumer, prometheus)
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()

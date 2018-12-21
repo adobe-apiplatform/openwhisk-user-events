@@ -16,25 +16,12 @@
  */
 
 package com.adobe.api.platform.runtime.metrics
-import java.net.ServerSocket
 
-import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
-import com.typesafe.config.Config
-
-trait EventsTestHelper {
-
-  protected def createConsumer(kport: Int, globalConfig: Config)(implicit system: ActorSystem,
-                                                                 materializer: ActorMaterializer) = {
-    val settings = OpenWhiskEvents
-      .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(globalConfig))
-      .withBootstrapServers(s"localhost:$kport")
-    EventConsumer(settings, Seq(KamonConsumer))
-  }
-
-  protected def freePort(): Int = {
-    val socket = new ServerSocket(0)
-    try socket.getLocalPort
-    finally if (socket != null) socket.close()
-  }
+object MetricNames {
+  val activationMetric = "openwhisk.action.activations"
+  val coldStartMetric = "openwhisk.action.coldStarts"
+  val waitTimeMetric = "openwhisk.action.waitTime"
+  val initTimeMetric = "openwhisk.action.initTime"
+  val durationMetric = "openwhisk.action.duration"
+  val statusMetric = "openwhisk.action.status"
 }

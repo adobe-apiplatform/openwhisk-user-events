@@ -22,6 +22,7 @@ import net.manub.embeddedkafka.EmbeddedKafkaConfig
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
+import com.adobe.api.platform.runtime.metrics.MetricNames._
 
 import scala.concurrent.duration._
 
@@ -64,48 +65,45 @@ class KamonConsumerTests extends KafkaSpecBase with BeforeAndAfterEach {
       sleep(sleepAfterProduce, "sleeping post produce")
       consumer.shutdown().futureValue
       sleep(1.second, "sleeping for Kamon reporters to get invoked")
-      TestReporter.counter("openwhisk.counter.container.activations").get.value shouldBe 1
+      TestReporter.counter(activationMetric).get.value shouldBe 1
       TestReporter
-        .counter("openwhisk.counter.container.activations")
+        .counter(activationMetric)
         .get
         .tags
         .find(_._2 == "whisk.system")
         .size shouldBe 1
       TestReporter
-        .counter("openwhisk.counter.container.activations")
+        .counter(activationMetric)
         .get
         .tags
         .find(_._2 == "apimgmt/createApi")
         .size shouldBe 1
-      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "nodejs:6").size shouldBe 1
-      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "256").size shouldBe 1
-      TestReporter.counter("openwhisk.counter.container.activations").get.tags.find(_._2 == "2").size shouldBe 1
-      TestReporter.counter("openwhisk.counter.container.coldStarts").get.value shouldBe 0
+      TestReporter.counter(statusMetric).get.tags.find(_._2 == Activation.statusDeveloperError).size shouldBe 1
+      TestReporter.counter(coldStartMetric).get.value shouldBe 1
+      TestReporter.counter(statusMetric).get.value shouldBe 1
 
-      TestReporter.histogram("openwhisk.histogram.container.waitTime").get.distribution.count shouldBe 1
-      TestReporter.histogram("openwhisk.histogram.container.initTime").get.distribution.count shouldBe 1
-      TestReporter.histogram("openwhisk.histogram.container.duration").get.distribution.count shouldBe 1
+      TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
+      TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
+      TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
       TestReporter
-        .histogram("openwhisk.histogram.container.duration")
+        .histogram(durationMetric)
         .get
         .tags
         .find(_._2 == "whisk.system")
         .size shouldBe 1
       TestReporter
-        .histogram("openwhisk.histogram.container.duration")
+        .histogram(durationMetric)
         .get
         .tags
         .find(_._2 == "apimgmt/createApi")
         .size shouldBe 1
-      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "nodejs:6").size shouldBe 1
-      TestReporter.histogram("openwhisk.histogram.container.duration").get.tags.find(_._2 == "256").size shouldBe 1
     }
   }
 
   private def newActivationEvent(name: String, kind: String = "nodejs:6") =
     EventMessage(
       "test",
-      Activation(name, 2, 3, 0, 11, kind, false, 256, None),
+      Activation(name, 2, 3, 5, 11, kind, false, 256, None),
       "testuser",
       "testNS",
       "test",

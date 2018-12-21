@@ -20,13 +20,16 @@ import akka.kafka.scaladsl.Consumer.DrainingControl
 import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink}
-import kamon.Kamon
-import kamon.metric.MeasurementUnit
 
 import scala.concurrent.Future
 
-case class EventConsumer(settings: ConsumerSettings[String, String])(implicit system: ActorSystem,
-                                                                     materializer: ActorMaterializer) {
+trait MetricRecorder {
+  def processEvent(activation: Activation): Unit
+}
+
+case class EventConsumer(settings: ConsumerSettings[String, String], recorders: Seq[MetricRecorder])(
+  implicit system: ActorSystem,
+  materializer: ActorMaterializer) {
   import EventConsumer._
 
   def shutdown(): Future[Done] = {
@@ -48,54 +51,17 @@ case class EventConsumer(settings: ConsumerSettings[String, String])(implicit sy
     .mapMaterializedValue(DrainingControl.apply)
     .run()
 
-}
-
-object EventConsumer {
-  val userEventTopic = "events"
-
   private[metrics] def processEvent(value: String): Unit = {
     EventMessage
       .parse(value)
       .collect { case e if e.eventType == Activation.typeName => e } //Look for only Activations
       .foreach { e =>
         val a = e.body.asInstanceOf[Activation]
-        val (namespace, action) = getNamespaceAction(a.name)
-
-        val tags = Map(
-          "namespace" -> namespace,
-          "action" -> action,
-          "kind" -> a.kind,
-          "memory" -> a.memory.toString,
-          "status" -> a.statusCode.toString)
-
-        Kamon.counter("openwhisk.counter.container.activations").refine(tags).increment()
-        Kamon
-          .counter("openwhisk.counter.container.coldStarts")
-          .refine(tags)
-          .increment(if (a.waitTime > 0) 1L else 0L)
-
-        Kamon
-          .histogram("openwhisk.histogram.container.waitTime", MeasurementUnit.time.milliseconds)
-          .refine(tags)
-          .record(a.waitTime)
-        Kamon
-          .histogram("openwhisk.histogram.container.initTime", MeasurementUnit.time.milliseconds)
-          .refine(tags)
-          .record(a.initTime)
-        Kamon
-          .histogram("openwhisk.histogram.container.duration", MeasurementUnit.time.milliseconds)
-          .refine(tags)
-          .record(a.duration)
+        recorders.foreach(_.processEvent(a))
       }
   }
+}
 
-  /**
-   * Extract namespace and action from name
-   * ex. whisk.system/apimgmt/createApi -> (whisk.system, apimgmt/createApi)
-   */
-  private def getNamespaceAction(name: String): (String, String) = {
-    val nameArr = name.split("/", 2)
-    (nameArr(0), nameArr(1))
-  }
-
+object EventConsumer {
+  val userEventTopic = "events"
 }
