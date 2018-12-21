@@ -32,7 +32,6 @@ import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
 
 object PrometheusConsumer extends MetricRecorder with PrometheusExporter {
-
   private val metrics = new TrieMap[String, PrometheusMetrics]
   private val activationCounter = counter(activationMetric, "Activation Count", "namespace", "action")
   private val coldStartCounter = counter(coldStartMetric, "Cold start counts", "namespace", "action")
@@ -126,5 +125,4 @@ object PrometheusConsumer extends MetricRecorder with PrometheusExporter {
       value
     }
   }
-
 }
