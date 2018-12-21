@@ -12,9 +12,12 @@ governing permissions and limitations under the License.
 
 package com.adobe.api.platform.runtime.metrics
 
+import java.nio.charset.StandardCharsets.UTF_8
+
 import akka.actor.{ActorSystem, CoordinatedShutdown}
 import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpEntity
 import akka.kafka.ConsumerSettings
 import akka.stream.ActorMaterializer
 import com.typesafe.config.Config
@@ -37,7 +40,7 @@ object OpenWhiskEvents extends SLF4JLogging {
     Kamon.addReporter(prometheus)
     val port = metricConfig.port
     val kamonConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), Seq(KamonConsumer))
-    val api = new EventsApi(kamonConsumer, prometheus)
+    val api = new EventsApi(kamonConsumer, getExporter(prometheus))
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       kamonConsumer.shutdown()
     }
@@ -52,5 +55,8 @@ object OpenWhiskEvents extends SLF4JLogging {
       .withProperty(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest")
 
   def defaultConsumerConfig(globalConfig: Config): Config = globalConfig.getConfig("akka.kafka.consumer")
+
+  private def getExporter(reporter: PrometheusReporter): PrometheusExporter =
+    () => HttpEntity(PrometheusExporter.textV4, reporter.scrapeData().getBytes(UTF_8))
 
 }

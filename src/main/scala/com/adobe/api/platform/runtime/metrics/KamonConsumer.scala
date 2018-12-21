@@ -17,11 +17,12 @@
 
 package com.adobe.api.platform.runtime.metrics
 
-import scala.collection.concurrent.TrieMap
 import com.adobe.api.platform.runtime.metrics.Activation.getNamespaceAndActionName
 import com.adobe.api.platform.runtime.metrics.MetricNames._
 import kamon.Kamon
 import kamon.metric.MeasurementUnit
+
+import scala.collection.concurrent.TrieMap
 
 object KamonConsumer extends MetricRecorder {
   private val metrics = new TrieMap[String, KamonMetrics]
