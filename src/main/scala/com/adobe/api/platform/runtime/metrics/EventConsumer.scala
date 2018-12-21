@@ -51,7 +51,7 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
     .mapMaterializedValue(DrainingControl.apply)
     .run()
 
-  private[metrics] def processEvent(value: String): Unit = {
+  private def processEvent(value: String): Unit = {
     EventMessage
       .parse(value)
       .collect { case e if e.eventType == Activation.typeName => e } //Look for only Activations
