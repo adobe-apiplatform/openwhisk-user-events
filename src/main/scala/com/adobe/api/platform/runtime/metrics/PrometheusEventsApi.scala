@@ -24,7 +24,7 @@ object PrometheusExporter {
   val textV4: ContentType = ContentType.parse("text/plain; version=0.0.4; charset=utf-8").right.get
 }
 
-class EventsApi(consumer: EventConsumer, prometheus: PrometheusExporter) {
+class PrometheusEventsApi(consumer: EventConsumer, prometheus: PrometheusExporter) {
   val routes: Route = {
     get {
       path("ping") {

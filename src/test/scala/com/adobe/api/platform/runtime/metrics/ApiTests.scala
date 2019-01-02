@@ -31,7 +31,7 @@ class ApiTests extends FlatSpec with Matchers with ScalatestRouteTest with Event
 
   it should "respond ping request" in {
     val consumer = createConsumer(56754, system.settings.config)
-    val api = new EventsApi(consumer, createExporter())
+    val api = new PrometheusEventsApi(consumer, createExporter())
     Get("/ping") ~> api.routes ~> check {
       //Due to retries using a random port does not immediately result in failure
       handled shouldBe true
@@ -41,7 +41,7 @@ class ApiTests extends FlatSpec with Matchers with ScalatestRouteTest with Event
 
   it should "respond metrics request" in {
     val consumer = createConsumer(56754, system.settings.config)
-    val api = new EventsApi(consumer, createExporter())
+    val api = new PrometheusEventsApi(consumer, createExporter())
     Get("/metrics") ~> `Accept-Encoding`(gzip) ~> api.routes ~> check {
       contentType.charsetOption shouldBe Some(HttpCharsets.`UTF-8`)
       contentType.mediaType.params("version") shouldBe "0.0.4"
