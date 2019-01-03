@@ -35,20 +35,9 @@ trait PrometheusMetricNames extends MetricNames {
   val statusMetric = "openwhisk_action_status"
 }
 
-case class PrometheusRecorder(kamon: PrometheusReporter)
-    extends MetricRecorder
-    with PrometheusExporter
-    with PrometheusMetricNames {
+case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder with PrometheusExporter {
+  import PrometheusRecorder._
   private val metrics = new TrieMap[String, PrometheusMetrics]
-  private val activationCounter = counter(activationMetric, "Activation Count", actionNamespace, actionName)
-  private val coldStartCounter = counter(coldStartMetric, "Cold start counts", actionNamespace, actionName)
-  private val statusCounter =
-    counter(statusMetric, "Activation failure status type", actionNamespace, actionName, "status")
-  private val waitTimeHisto = histogram(waitTimeMetric, "Internal system hold time", actionNamespace, actionName)
-  private val initTimeHisto =
-    histogram(initTimeMetric, "Time it took to initialize an action, e.g. docker init", actionNamespace, actionName)
-  private val durationHisto =
-    histogram(durationMetric, "Actual time the action code was running", actionNamespace, actionName)
 
   def processEvent(activation: Activation): Unit = {
     lookup(activation.name).record(activation)
@@ -92,22 +81,6 @@ case class PrometheusRecorder(kamon: PrometheusReporter)
 
   private def seconds(timeInMillis: Long) = TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
 
-  private def counter(name: String, help: String, tags: String*) =
-    Counter
-      .build()
-      .name(name)
-      .help(help)
-      .labelNames(tags: _*)
-      .register()
-
-  private def histogram(name: String, help: String, tags: String*) =
-    Histogram
-      .build()
-      .name(name)
-      .help(help)
-      .labelNames(tags: _*)
-      .register()
-
   private def createSource() =
     Source.combine(createJavaClientSource(), createKamonSource())(Concat(_)).map(ByteString(_))
 
@@ -135,4 +108,32 @@ case class PrometheusRecorder(kamon: PrometheusReporter)
       value
     }
   }
+}
+
+object PrometheusRecorder extends PrometheusMetricNames {
+  private val activationCounter = counter(activationMetric, "Activation Count", actionNamespace, actionName)
+  private val coldStartCounter = counter(coldStartMetric, "Cold start counts", actionNamespace, actionName)
+  private val statusCounter =
+    counter(statusMetric, "Activation failure status type", actionNamespace, actionName, "status")
+  private val waitTimeHisto = histogram(waitTimeMetric, "Internal system hold time", actionNamespace, actionName)
+  private val initTimeHisto =
+    histogram(initTimeMetric, "Time it took to initialize an action, e.g. docker init", actionNamespace, actionName)
+  private val durationHisto =
+    histogram(durationMetric, "Actual time the action code was running", actionNamespace, actionName)
+
+  private def counter(name: String, help: String, tags: String*) =
+    Counter
+      .build()
+      .name(name)
+      .help(help)
+      .labelNames(tags: _*)
+      .register()
+
+  private def histogram(name: String, help: String, tags: String*) =
+    Histogram
+      .build()
+      .name(name)
+      .help(help)
+      .labelNames(tags: _*)
+      .register()
 }
