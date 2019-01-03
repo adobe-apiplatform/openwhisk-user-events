@@ -14,11 +14,13 @@ package com.adobe.api.platform.runtime.metrics
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+
 import scala.concurrent.duration.DurationInt
 import akka.testkit.TestKit
+import io.prometheus.client.CollectorRegistry
 import net.manub.embeddedkafka.EmbeddedKafka
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.scalatest.{BeforeAndAfterAll, FlatSpecLike, Matchers, Suite}
+import org.scalatest._
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration.FiniteDuration
@@ -32,6 +34,7 @@ abstract class KafkaSpecBase
     with EmbeddedKafka
     with IntegrationPatience
     with BeforeAndAfterAll
+    with BeforeAndAfterEach
     with Eventually
     with EventsTestHelper { this: Suite =>
   val log: Logger = LoggerFactory.getLogger(getClass)
@@ -42,6 +45,11 @@ abstract class KafkaSpecBase
   def sleep(time: FiniteDuration, msg: String = ""): Unit = {
     log.info(s"sleeping $time $msg")
     Thread.sleep(time.toMillis)
+  }
+
+  override protected def beforeEach(): Unit = {
+    super.beforeEach()
+    CollectorRegistry.defaultRegistry.clear()
   }
 
   override protected def afterAll(): Unit = {
