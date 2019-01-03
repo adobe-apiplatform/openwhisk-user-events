@@ -16,11 +16,12 @@ import java.util
 import java.util.concurrent.TimeUnit
 
 import akka.http.scaladsl.model.{HttpEntity, MessageEntity}
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Concat, Source}
 import akka.util.ByteString
 import com.adobe.api.platform.runtime.metrics.Activation.getNamespaceAndActionName
 import io.prometheus.client.exporter.common.TextFormat
 import io.prometheus.client.{CollectorRegistry, Counter, Histogram}
+import kamon.prometheus.PrometheusReporter
 
 import scala.collection.JavaConverters._
 import scala.collection.concurrent.TrieMap
@@ -34,7 +35,10 @@ trait PrometheusMetricNames extends MetricNames {
   val statusMetric = "openwhisk_action_status"
 }
 
-object PrometheusRecorder extends MetricRecorder with PrometheusExporter with PrometheusMetricNames {
+case class PrometheusRecorder(kamon: PrometheusReporter)
+    extends MetricRecorder
+    with PrometheusExporter
+    with PrometheusMetricNames {
   private val metrics = new TrieMap[String, PrometheusMetrics]
   private val activationCounter = counter(activationMetric, "Activation Count", actionNamespace, actionName)
   private val coldStartCounter = counter(coldStartMetric, "Cold start counts", actionNamespace, actionName)
@@ -46,14 +50,12 @@ object PrometheusRecorder extends MetricRecorder with PrometheusExporter with Pr
   private val durationHisto =
     histogram(durationMetric, "Actual time the action code was running", actionNamespace, actionName)
 
-  private val metricSource = createSource()
-
   def processEvent(activation: Activation): Unit = {
     lookup(activation.name).record(activation)
   }
 
   override def getReport(): MessageEntity =
-    HttpEntity(PrometheusExporter.textV4, metricSource)
+    HttpEntity(PrometheusExporter.textV4, createSource())
 
   private def lookup(name: String): PrometheusMetrics = {
     //TODO Unregister unused actions
@@ -106,10 +108,13 @@ object PrometheusRecorder extends MetricRecorder with PrometheusExporter with Pr
       .labelNames(tags: _*)
       .register()
 
+  private def createSource() =
+    Source.combine(createJavaClientSource(), createKamonSource())(Concat(_)).map(ByteString(_))
+
   /**
    * Enables streaming the prometheus metric data without building the whole report in memory
    */
-  private def createSource() =
+  private def createJavaClientSource() =
     Source
       .fromIterator(() => CollectorRegistry.defaultRegistry.metricFamilySamples().asScala)
       .map { sample =>
@@ -118,7 +123,8 @@ object PrometheusRecorder extends MetricRecorder with PrometheusExporter with Pr
         TextFormat.write004(writer, singletonEnumeration(sample))
         writer.toString
       }
-      .map(ByteString(_))
+
+  private def createKamonSource() = Source.single(kamon.scrapeData())
 
   private def singletonEnumeration[A](value: A) = new util.Enumeration[A] {
     private var done = false
