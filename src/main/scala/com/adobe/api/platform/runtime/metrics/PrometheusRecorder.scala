@@ -73,9 +73,7 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
       waitTime.observe(seconds(a.waitTime))
       duration.observe(seconds(a.duration))
 
-      if (a.statusCode != 0) {
-        statusCounter.labels(namespace, action, a.status).inc()
-      }
+      statusCounter.labels(namespace, action, a.status).inc()
     }
   }
 
