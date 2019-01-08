@@ -119,7 +119,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(sum(increase(openwhisk_action_status{namespace=~\"$Namespace\",action=~\"$Action\",status=\"success\"}[1m])) by (action)) * 100 / sum(sum(increase(openwhisk_action_status{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (action))",
+          "expr": "sum(sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\",status=\"success\"}[1m])) by (action)) * 100 / sum(sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (action))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -200,7 +200,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (le,action)) * 1e3)",
+          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -282,7 +282,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (le,action)) * 1e3)",
+          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -350,7 +350,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(openwhisk_action_activations_total{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (action)",
+          "expr": "sum(increase(openwhisk_action_activations_total{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (action)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -436,7 +436,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(openwhisk_action_status{namespace=~\"$Namespace\",action=~\"$Action\",status=\"success\"}[1m])) by (action)",
+          "expr": "sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\",status=\"success\"}[1m])) by (action)",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -523,7 +523,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(increase(openwhisk_action_status{namespace=~\"$Namespace\",action=~\"$Action\",status!=\"success\"}[1m])) by (action,status)",
+          "expr": "sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\",status!=\"success\"}[1m])) by (action,status)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -629,7 +629,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (le,action)) * 1e3",
+          "expr": "histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3",
           "format": "time_series",
           "intervalFactor": 1,
           "legendFormat": "{{action}}",
@@ -728,7 +728,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$Namespace\",action=~\"$Action\"}[1m])) by (le,action)) * 1e3",
+          "expr": "histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3",
           "format": "time_series",
           "instant": false,
           "interval": "",
@@ -792,12 +792,12 @@
           "value": "All"
         },
         "datasource": null,
-        "definition": "label_values(openwhisk_counter_container_activations_total,namespace)",
+        "definition": "label_values(openwhisk_action_activations_total,namespace)",
         "hide": 0,
         "includeAll": true,
         "label": null,
         "multi": false,
-        "name": "Namespace",
+        "name": "namespace",
         "options": [],
         "query": "label_values(openwhisk_action_activations_total,namespace)",
         "refresh": 1,
@@ -822,9 +822,9 @@
         "includeAll": true,
         "label": null,
         "multi": false,
-        "name": "Action",
+        "name": "action",
         "options": [],
-        "query": "label_values(openwhisk_action_activations_total{namespace=~\"$Namespace\"},action)",
+        "query": "label_values(openwhisk_action_activations_total{namespace=~\"$namespace\"},action)",
         "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
