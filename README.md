@@ -39,10 +39,14 @@ Integrations
 The docker container would run the service and expose the metrics in format required by Prometheus at `9095` port
 
 #### Grafana
-The `Openwhisk - Action Performance Metrics` grafana dashboard is available on port `3000` at this address: 
-[http://localhost:3000/d/Oew1lvymk/openwhisk-action-performance-metrics](http://localhost:3000/d/Oew1lvymk/openwhisk-action-performance-metrics)
+The `Openwhisk - Action Performance Metrics` grafana dashboard is available on localhost port `3000` at this address: 
+[http://localhost:3000/d/Oew1lvymk/openwhisk-action-performance-metrics][5]
+
+The latest version of the dashboard can be found on [Grafana Labs][6].
 
 [1]: https://github.com/apache/incubator-openwhisk/blob/master/docs/metrics.md#user-specific-metrics
 [2]: https://github.com/apache/incubator-openwhisk-devtools/tree/master/docker-compose
 [3]: https://hub.docker.com/r/prom/prometheus/
 [4]: https://hub.docker.com/r/grafana/grafana/
+[5]: http://localhost:3000/d/Oew1lvymk/openwhisk-action-performance-metrics
+[6]: https://grafana.com/dashboards/9564
