@@ -52,7 +52,7 @@
   "editable": true,
   "gnetId": 9564,
   "graphTooltip": 0,
-  "iteration": 1546951304014,
+  "iteration": 1547232303636,
   "links": [],
   "panels": [
     {
@@ -64,7 +64,6 @@
         "rgba(237, 129, 40, 0.89)",
         "#d44a3a"
       ],
-      "datasource": null,
       "decimals": 0,
       "description": "Total number of activation in the selected time interval",
       "format": "none",
@@ -146,7 +145,6 @@
         "#508642",
         "#299c46"
       ],
-      "datasource": null,
       "decimals": 0,
       "description": "Total number of successful activations executed",
       "format": "none",
@@ -230,7 +228,6 @@
         "#e24d42",
         "#e24d42"
       ],
-      "datasource": null,
       "decimals": 0,
       "description": "Total number of error activations in the selected time interval",
       "format": "none",
@@ -312,7 +309,6 @@
         "#1f78c1",
         "#1f78c1"
       ],
-      "datasource": null,
       "decimals": 0,
       "description": "Total number of cold starts in the selected time interval",
       "format": "none",
@@ -407,7 +403,6 @@
         "rgba(237, 129, 40, 0.89)",
         "#299c46"
       ],
-      "datasource": null,
       "format": "percent",
       "gauge": {
         "maxValue": 100,
@@ -459,7 +454,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "sum(sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\",status=\"success\"}[1m])) by (action)) * 100 / sum(sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (action))",
+          "expr": "sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\",status=\"success\"}[$interval])) * 100 / sum(increase(openwhisk_action_status{namespace=~\"$namespace\",action=~\"$action\"}[$interval]))",
           "format": "time_series",
           "intervalFactor": 1,
           "refId": "A",
@@ -488,7 +483,6 @@
         "rgba(237, 129, 40, 0.89)",
         "#299c46"
       ],
-      "datasource": null,
       "format": "ms",
       "gauge": {
         "maxValue": 100,
@@ -540,7 +534,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3)",
+          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_duration_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[$interval])) by (le,action)) * 1e3)",
           "format": "time_series",
           "instant": false,
           "intervalFactor": 1,
@@ -570,7 +564,6 @@
         "rgba(237, 129, 40, 0.89)",
         "#299c46"
       ],
-      "datasource": null,
       "format": "ms",
       "gauge": {
         "maxValue": 100,
@@ -622,7 +615,7 @@
       "tableColumn": "",
       "targets": [
         {
-          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[1m])) by (le,action)) * 1e3)",
+          "expr": "max(histogram_quantile(0.95, sum(rate(openwhisk_action_initTime_seconds_bucket{namespace=~\"$namespace\",action=~\"$action\"}[$interval])) by (le,action)) * 1e3)",
           "format": "time_series",
           "interval": "",
           "intervalFactor": 1,
@@ -658,7 +651,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 0,
       "gridPos": {
         "h": 9,
@@ -744,7 +736,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -831,7 +822,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -930,7 +920,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "gridPos": {
         "h": 8,
@@ -996,7 +985,7 @@
       },
       "yaxes": [
         {
-          "decimals": null,
+          "decimals": 2,
           "format": "ms",
           "label": "",
           "logBase": 1,
@@ -1036,7 +1025,6 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": null,
       "fill": 1,
       "gridPos": {
         "h": 9,
@@ -1097,6 +1085,7 @@
       },
       "yaxes": [
         {
+          "decimals": 2,
           "format": "ms",
           "label": "",
           "logBase": 1,
@@ -1153,7 +1142,6 @@
       {
         "allValue": "",
         "current": {
-          "tags": [],
           "text": "All",
           "value": "$__all"
         },
