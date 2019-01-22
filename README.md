@@ -1,3 +1,5 @@
+# ![OpenWhisk User Events](https://adobe-apiplatform.github.io/openwhisk-user-events/images/demo_landing.png)
+
 # OpenWhisk User Events
 
 [![Build Status](https://travis-ci.org/adobe-apiplatform/openwhisk-user-events.svg?branch=master)](https://travis-ci.org/adobe-apiplatform/openwhisk-user-events)
