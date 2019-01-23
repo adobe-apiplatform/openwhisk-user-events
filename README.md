@@ -43,7 +43,8 @@ A docker image of the `user-events` service can be build running this command:
 ```bash
 make docker-build
 ```
-The latest docker image can also be found on [docker hub][7]. 
+The latest docker image can also be found on docker hub under this name: [adobeapiplatform/openwhisk-user-events][7].
+
 This image can be deployed in any other configuration that doesn't include `docker-compose`, as long as the environment variable `KAFKA_HOSTS` is being set to point to the existing openwhisk Kafka URL.
 
 Integrations
