@@ -17,7 +17,7 @@ make all
 ```
 
 ## Run
->First configure and run `openwhisk docker-compose` that can be found in the [openwhisk-tools](https://github.com/apache/incubator-openwhisk-devtools/tree/master/docker-compose) project. 
+>First configure and run `openwhisk docker-compose` that can be found in the [openwhisk-tools][2] project. 
 
 Once the `openwhisk docker-compose` has been started, go ahead and execute the following command:  
 
@@ -37,6 +37,15 @@ These ports must be available:
 
 - `docker-compose` logs - `~/tmp/openwhisk/docker-compose-events.log`
 
+## Building a Docker image
+
+A docker image of the `user-events` service can be build running this command: 
+```bash
+make docker-build
+```
+The latest docker image can also be found on [docker hub][7]. 
+This image can be deployed in any other configuration that doesn't include `docker-compose`, as long as the environment variable `KAFKA_HOSTS` is being set to point to the existing openwhisk Kafka URL.
+
 Integrations
 ------------
 
@@ -55,3 +64,4 @@ The latest version of the dashboard can be found on [Grafana Labs][6].
 [4]: https://hub.docker.com/r/grafana/grafana/
 [5]: http://localhost:3000/d/Oew1lvymk/openwhisk-action-performance-metrics
 [6]: https://grafana.com/dashboards/9564
+[7]: https://cloud.docker.com/u/adobeapiplatform/repository/docker/adobeapiplatform/openwhisk-user-events
