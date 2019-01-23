@@ -17,12 +17,15 @@ make all
 ```
 
 ## Run
+>First configure and run `openwhisk docker-compose` that can be found in the [openwhisk-tools](https://github.com/apache/incubator-openwhisk-devtools/tree/master/docker-compose) project. 
+
+Once the `openwhisk docker-compose` has been started, go ahead and execute the following command:  
+
 ```bash
 make start-docker-compose
 ```
 
-This command will start the `user-event` service along with [prometheus][3] and [grafana][4] inside the same [docker-compose openwhisk][2] network. 
-
+This will start the `user-event` service along with [prometheus][3] and [grafana][4] inside the same [docker-compose openwhisk][2] network. 
 
 These ports must be available:
 
