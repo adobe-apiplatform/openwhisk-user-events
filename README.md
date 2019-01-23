@@ -1,4 +1,4 @@
-# ![OpenWhisk User Events](https://github.com/adobe-apiplatform/openwhisk-user-events/raw/master/images/demo_landing.png)
+# ![OpenWhisk User Events](https://raw.githubusercontent.com/adobe-apiplatform/openwhisk-user-events/grafana-ui/images/demo_landing.png)
 
 # OpenWhisk User Events
 
