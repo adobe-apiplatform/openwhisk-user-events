@@ -36,7 +36,9 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
       createCustomTopic(EventConsumer.userEventTopic)
 
       val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config)
-      publishStringMessageToKafka(EventConsumer.userEventTopic, newActivationEvent(s"$namespace/$action", kind, memory).serialize)
+      publishStringMessageToKafka(
+        EventConsumer.userEventTopic,
+        newActivationEvent(s"$namespace/$action", kind, memory).serialize)
 
       sleep(sleepAfterProduce, "sleeping post produce")
       consumer.shutdown().futureValue
@@ -50,7 +52,7 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
     }
   }
 
-  private def newActivationEvent(name: String, kind: String , memory: String) =
+  private def newActivationEvent(name: String, kind: String, memory: String) =
     EventMessage(
       "test",
       Activation(name, 2, 3, 5, 11, kind, false, memory.toInt, None),
@@ -63,7 +65,10 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
     CollectorRegistry.defaultRegistry.getSampleValue(name, Array("namespace", "action"), Array(namespace, action))
 
   private def counterTotal(name: String) =
-    CollectorRegistry.defaultRegistry.getSampleValue(name, Array("namespace", "action", "kind", "memory"), Array(namespace, action, kind, memory))
+    CollectorRegistry.defaultRegistry.getSampleValue(
+      name,
+      Array("namespace", "action", "kind", "memory"),
+      Array(namespace, action, kind, memory))
 
   private def counterStatus(name: String, status: String) =
     CollectorRegistry.defaultRegistry.getSampleValue(
