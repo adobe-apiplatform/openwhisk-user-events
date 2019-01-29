@@ -123,7 +123,8 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
 }
 
 object PrometheusRecorder extends PrometheusMetricNames {
-  private val activationCounter = counter(activationMetric, "Activation Count", actionNamespace, actionName, actionKind, actionMemory)
+  private val activationCounter =
+    counter(activationMetric, "Activation Count", actionNamespace, actionName, actionKind, actionMemory)
   private val coldStartCounter = counter(coldStartMetric, "Cold start counts", actionNamespace, actionName)
   private val statusCounter =
     counter(statusMetric, "Activation failure status type", actionNamespace, actionName, actionStatus)
