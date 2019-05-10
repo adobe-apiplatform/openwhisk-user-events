@@ -18,7 +18,6 @@ import com.typesafe.config.{Config, ConfigFactory}
 import kamon.metric.{PeriodSnapshot, PeriodSnapshotAccumulator}
 import kamon.util.Registration
 import kamon.{Kamon, MetricReporter}
-import net.manub.embeddedkafka.EmbeddedKafkaConfig
 import org.junit.runner.RunWith
 import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
@@ -27,7 +26,6 @@ import scala.concurrent.duration._
 
 @RunWith(classOf[JUnitRunner])
 class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with KamonMetricNames {
-  val sleepAfterProduce: FiniteDuration = 4.seconds
   var reporterReg: Registration = _
 
   override protected def beforeEach(): Unit = {
@@ -52,51 +50,48 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
   behavior of "KamonConsumer"
 
   it should "push user events to kamon" in {
-    val kconfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
-    withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
-      createCustomTopic(EventConsumer.userEventTopic)
+    createCustomTopic(EventConsumer.userEventTopic)
 
-      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config, KamonRecorder)
-      publishStringMessageToKafka(
-        EventConsumer.userEventTopic,
-        newActivationEvent("whisk.system/apimgmt/createApi").serialize)
+    val consumer = createConsumer(kafkaPort, system.settings.config, KamonRecorder)
+    publishStringMessageToKafka(
+      EventConsumer.userEventTopic,
+      newActivationEvent("whisk.system/apimgmt/createApi").serialize)
 
-      sleep(sleepAfterProduce, "sleeping post produce")
-      consumer.shutdown().futureValue
-      sleep(1.second, "sleeping for Kamon reporters to get invoked")
-      TestReporter.counter(activationMetric).get.value shouldBe 1
-      TestReporter
-        .counter(activationMetric)
-        .get
-        .tags
-        .find(_._2 == "whisk.system")
-        .size shouldBe 1
-      TestReporter
-        .counter(activationMetric)
-        .get
-        .tags
-        .find(_._2 == "apimgmt/createApi")
-        .size shouldBe 1
-      TestReporter.counter(statusMetric).get.tags.find(_._2 == Activation.statusDeveloperError).size shouldBe 1
-      TestReporter.counter(coldStartMetric).get.value shouldBe 1
-      TestReporter.counter(statusMetric).get.value shouldBe 1
+    waitForMessages()
+    consumer.shutdown().futureValue
+    sleep(1.second, "sleeping for Kamon reporters to get invoked")
+    TestReporter.counter(activationMetric).get.value shouldBe 1
+    TestReporter
+      .counter(activationMetric)
+      .get
+      .tags
+      .find(_._2 == "whisk.system")
+      .size shouldBe 1
+    TestReporter
+      .counter(activationMetric)
+      .get
+      .tags
+      .find(_._2 == "apimgmt/createApi")
+      .size shouldBe 1
+    TestReporter.counter(statusMetric).get.tags.find(_._2 == Activation.statusDeveloperError).size shouldBe 1
+    TestReporter.counter(coldStartMetric).get.value shouldBe 1
+    TestReporter.counter(statusMetric).get.value shouldBe 1
 
-      TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
-      TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
-      TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
-      TestReporter
-        .histogram(durationMetric)
-        .get
-        .tags
-        .find(_._2 == "whisk.system")
-        .size shouldBe 1
-      TestReporter
-        .histogram(durationMetric)
-        .get
-        .tags
-        .find(_._2 == "apimgmt/createApi")
-        .size shouldBe 1
-    }
+    TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
+    TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
+    TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
+    TestReporter
+      .histogram(durationMetric)
+      .get
+      .tags
+      .find(_._2 == "whisk.system")
+      .size shouldBe 1
+    TestReporter
+      .histogram(durationMetric)
+      .get
+      .tags
+      .find(_._2 == "apimgmt/createApi")
+      .size shouldBe 1
   }
 
   private def newActivationEvent(name: String, kind: String = "nodejs:6") =

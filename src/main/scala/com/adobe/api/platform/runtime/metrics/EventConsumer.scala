@@ -14,12 +14,11 @@ package com.adobe.api.platform.runtime.metrics
 
 import akka.Done
 import akka.actor.ActorSystem
-import akka.kafka.ConsumerMessage.CommittableOffsetBatch
-import akka.kafka.scaladsl.Consumer
 import akka.kafka.scaladsl.Consumer.DrainingControl
-import akka.kafka.{ConsumerSettings, Subscriptions}
+import akka.kafka.scaladsl.{Committer, Consumer}
+import akka.kafka.{CommitterSettings, ConsumerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Keep, Sink}
+import akka.stream.scaladsl.Keep
 import kamon.Kamon
 
 import scala.concurrent.Future
@@ -50,9 +49,7 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
       processEvent(msg.record.value())
       msg.committableOffset
     }
-    .batch(max = 20, CommittableOffsetBatch(_))(_.updated(_))
-    .mapAsync(3)(_.commitScaladsl())
-    .toMat(Sink.ignore)(Keep.both)
+    .toMat(Committer.sink(CommitterSettings(system)))(Keep.both)
     .mapMaterializedValue(DrainingControl.apply)
     .run()
 

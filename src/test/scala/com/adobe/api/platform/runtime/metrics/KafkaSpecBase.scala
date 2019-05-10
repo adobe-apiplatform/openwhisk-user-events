@@ -12,36 +12,40 @@ governing permissions and limitations under the License.
 
 package com.adobe.api.platform.runtime.metrics
 
-import akka.actor.ActorSystem
+import akka.kafka.testkit.scaladsl.{EmbeddedKafkaLike, ScalatestKafkaSpec}
 import akka.stream.ActorMaterializer
-import akka.testkit.TestKit
-import net.manub.embeddedkafka.EmbeddedKafka
+import net.manub.embeddedkafka.{EmbeddedKafka, EmbeddedKafkaConfig}
+import org.apache.kafka.common.serialization.StringDeserializer
 import org.scalatest._
 import org.scalatest.concurrent.{Eventually, IntegrationPatience, ScalaFutures}
-import org.slf4j.{Logger, LoggerFactory}
 
 import scala.concurrent.duration.{DurationInt, FiniteDuration}
 
 abstract class KafkaSpecBase
-    extends TestKit(ActorSystem("test"))
-    with Suite
+    extends ScalatestKafkaSpec(6061)
     with Matchers
     with ScalaFutures
     with FlatSpecLike
     with EmbeddedKafka
+    with EmbeddedKafkaLike
     with IntegrationPatience
     with BeforeAndAfterAll
     with BeforeAndAfterEach
     with Eventually
     with EventsTestHelper { this: Suite =>
-  val log: Logger = LoggerFactory.getLogger(getClass)
   implicit val timeoutConfig = PatienceConfig(1.minute)
 
   implicit val materializer = ActorMaterializer()
 
-  def sleep(time: FiniteDuration, msg: String = ""): Unit = {
-    log.info(s"sleeping $time $msg")
-    Thread.sleep(time.toMillis)
+  override def createKafkaConfig: EmbeddedKafkaConfig = EmbeddedKafkaConfig(kafkaPort, zooKeeperPort)
+
+  override def sleepAfterProduce: FiniteDuration = 10.seconds
+
+  def waitForMessages(count: Int = 1) = {
+    sleep(sleepAfterProduce, "sleeping post produce")
+    consumeNumberMessagesFromTopics(Set(EventConsumer.userEventTopic), count, timeout = 60.seconds)(
+      createKafkaConfig,
+      new StringDeserializer)(EventConsumer.userEventTopic)
   }
 
   override protected def afterAll(): Unit = {

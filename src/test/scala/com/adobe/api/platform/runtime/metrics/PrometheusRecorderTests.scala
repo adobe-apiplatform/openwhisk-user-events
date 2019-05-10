@@ -13,16 +13,11 @@ governing permissions and limitations under the License.
 package com.adobe.api.platform.runtime.metrics
 
 import io.prometheus.client.CollectorRegistry
-import net.manub.embeddedkafka.EmbeddedKafkaConfig
 import org.junit.runner.RunWith
-import org.scalatest.BeforeAndAfterEach
 import org.scalatest.junit.JUnitRunner
 
-import scala.concurrent.duration._
-
 @RunWith(classOf[JUnitRunner])
-class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with PrometheusMetricNames {
-  val sleepAfterProduce: FiniteDuration = 4.seconds
+class PrometheusRecorderTests extends KafkaSpecBase with PrometheusMetricNames {
 
   behavior of "PrometheusConsumer"
   val namespace = "whisk.system"
@@ -30,28 +25,27 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
   val kind = "nodejs:10"
   val memory = "256"
 
-  it should "push user events to kamon" in {
-    val kconfig = EmbeddedKafkaConfig(kafkaPort = 0, zooKeeperPort = 0)
-    withRunningKafkaOnFoundPort(kconfig) { implicit actualConfig =>
-      createCustomTopic(EventConsumer.userEventTopic)
+  it should "push user events to prometheus" in {
+    createCustomTopic(EventConsumer.userEventTopic)
 
-      val consumer = createConsumer(actualConfig.kafkaPort, system.settings.config)
-      publishStringMessageToKafka(
-        EventConsumer.userEventTopic,
-        newActivationEvent(s"$namespace/$action", kind, memory).serialize)
+    val consumer = createConsumer(kafkaPort, system.settings.config)
+    publishStringMessageToKafka(
+      EventConsumer.userEventTopic,
+      newActivationEvent(s"$namespace/$action", kind, memory).serialize)
 
-      sleep(sleepAfterProduce, "sleeping post produce")
-      consumer.shutdown().futureValue
-      counterTotal(activationMetric) shouldBe 1
-      counter(coldStartMetric) shouldBe 1
-      counterStatus(statusMetric, Activation.statusDeveloperError) shouldBe 1
+    waitForMessages()
+    consumer.shutdown().futureValue
 
-      histogramCount(waitTimeMetric) shouldBe 1
-      histogramCount(initTimeMetric) shouldBe 1
-      histogramCount(durationMetric) shouldBe 1
+    counterTotal(activationMetric) shouldBe 1
+    counter(coldStartMetric) shouldBe 1
+    counterStatus(statusMetric, Activation.statusDeveloperError) shouldBe 1
 
-      gauge(memoryMetric) shouldBe 1
-    }
+    histogramCount(waitTimeMetric) shouldBe 1
+    histogramCount(initTimeMetric) shouldBe 1
+    histogramCount(durationMetric) shouldBe 1
+
+    gauge(memoryMetric) shouldBe 1
+
   }
 
   private def newActivationEvent(name: String, kind: String, memory: String) =
