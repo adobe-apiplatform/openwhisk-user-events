@@ -20,6 +20,7 @@ import akka.kafka.scaladsl.Consumer.DrainingControl
 import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink}
+import kamon.Kamon
 
 import scala.concurrent.Future
 
@@ -31,6 +32,10 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   implicit system: ActorSystem,
   materializer: ActorMaterializer) {
   import EventConsumer._
+
+  //Record the rate of events received
+  private val activationCounter = Kamon.counter("openwhisk.userevents.activations")
+  private val metricCounter = Kamon.counter("openwhisk.userevents.metric")
 
   def shutdown(): Future[Done] = {
     control.drainAndShutdown()(system.dispatcher)
@@ -54,6 +59,13 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   private def processEvent(value: String): Unit = {
     EventMessage
       .parse(value)
+      .map { e =>
+        e.eventType match {
+          case Activation.typeName => activationCounter.increment()
+          case Metric.typeName     => metricCounter.increment()
+        }
+        e
+      }
       .collect { case e if e.eventType == Activation.typeName => e } //Look for only Activations
       .foreach { e =>
         val a = e.body.asInstanceOf[Activation]

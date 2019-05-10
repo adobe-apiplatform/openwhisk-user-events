@@ -148,12 +148,13 @@ object Activation extends DefaultJsonProtocol {
 }
 
 case class Metric(metricName: String, metricValue: Long) extends EventMessageBody {
-  val typeName = "Metric"
+  val typeName = Metric.typeName
   def serialize = toJson.compactPrint
   def toJson = Metric.metricFormat.write(this).asJsObject
 }
 
 object Metric extends DefaultJsonProtocol {
+  val typeName = "Metric"
   def parse(msg: String) = Try(metricFormat.read(msg.parseJson))
   implicit val metricFormat = jsonFormat(Metric.apply _, "metricName", "metricValue")
 }
