@@ -21,6 +21,7 @@ import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink}
 import kamon.Kamon
+import kamon.metric.MeasurementUnit
 
 import scala.concurrent.Future
 
@@ -45,6 +46,10 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   private val statusApplicationError = statusCounter.refine("status" -> Activation.statusApplicationError)
   private val statusDeveloperError = statusCounter.refine("status" -> Activation.statusDeveloperError)
   private val statusInternalError = statusCounter.refine("status" -> Activation.statusInternalError)
+
+  private val waitTime = Kamon.histogram("openwhisk.userevents.global.waitTime", MeasurementUnit.time.milliseconds)
+  private val initTime = Kamon.histogram("openwhisk.userevents.global.initTime", MeasurementUnit.time.milliseconds)
+  private val duration = Kamon.histogram("openwhisk.userevents.global.duration", MeasurementUnit.time.milliseconds)
 
   def shutdown(): Future[Done] = {
     control.drainAndShutdown()(system.dispatcher)
@@ -93,7 +98,13 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
     }
 
     if (a.status != Activation.statusSuccess) statusFailure.increment()
-    if (a.isColdStart) coldStartCounter.increment()
+    if (a.isColdStart) {
+      coldStartCounter.increment()
+      initTime.record(a.initTime)
+    }
+
+    waitTime.record(a.waitTime)
+    duration.record(a.duration)
   }
 }
 
