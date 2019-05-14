@@ -34,8 +34,16 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   import EventConsumer._
 
   //Record the rate of events received
-  private val activationCounter = Kamon.counter("openwhisk.userevents.activations")
-  private val metricCounter = Kamon.counter("openwhisk.userevents.metric")
+  private val activationCounter = Kamon.counter("openwhisk.userevents.global.activations")
+  private val metricCounter = Kamon.counter("openwhisk.userevents.global.metric")
+
+  private val statusCounter = Kamon.counter("openwhisk.userevents.global.status")
+
+  private val statusSuccess = statusCounter.refine("status" -> Activation.statusSuccess)
+  private val statusFailure = statusCounter.refine("status" -> "failure")
+  private val statusApplicationError = statusCounter.refine("status" -> Activation.statusApplicationError)
+  private val statusDeveloperError = statusCounter.refine("status" -> Activation.statusDeveloperError)
+  private val statusInternalError = statusCounter.refine("status" -> Activation.statusInternalError)
 
   def shutdown(): Future[Done] = {
     control.drainAndShutdown()(system.dispatcher)
@@ -70,7 +78,20 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
       .foreach { e =>
         val a = e.body.asInstanceOf[Activation]
         recorders.foreach(_.processEvent(a))
+        updateGlobalMetrics(a)
       }
+  }
+
+  private def updateGlobalMetrics(a: Activation): Unit = {
+    a.status match {
+      case Activation.statusSuccess          => statusSuccess.increment()
+      case Activation.statusApplicationError => statusApplicationError.increment()
+      case Activation.statusDeveloperError   => statusDeveloperError.increment()
+      case Activation.statusInternalError    => statusInternalError.increment()
+      case _                                 => //Ignore for now
+    }
+
+    if (a.status != Activation.statusSuccess) statusFailure.increment()
   }
 }
 
