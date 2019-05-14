@@ -1,40 +1,4 @@
 {
-  "__inputs": [
-    {
-      "name": "DS_PROMETHEUS",
-      "label": "Prometheus",
-      "description": "",
-      "type": "datasource",
-      "pluginId": "prometheus",
-      "pluginName": "Prometheus"
-    }
-  ],
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "5.4.3"
-    },
-    {
-      "type": "panel",
-      "id": "graph",
-      "name": "Graph",
-      "version": "5.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "5.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "singlestat",
-      "name": "Singlestat",
-      "version": "5.0.0"
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -51,7 +15,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "panels": [
     {
@@ -302,6 +265,26 @@
       "valueName": "current"
     },
     {
+      "folderId": null,
+      "gridPos": {
+        "h": 3,
+        "w": 11,
+        "x": 12,
+        "y": 0
+      },
+      "headings": true,
+      "id": 8,
+      "limit": 10,
+      "links": [],
+      "query": "",
+      "recent": false,
+      "search": true,
+      "starred": false,
+      "tags": ["openwhisk"],
+      "title": "Related Dashboards",
+      "type": "dashlist"
+    },
+    {
       "aliasColors": {},
       "bars": false,
       "dashLength": 10,
@@ -397,7 +380,9 @@
   "refresh": false,
   "schemaVersion": 16,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "openwhisk"
+  ],
   "templating": {
     "list": []
   },
@@ -433,5 +418,5 @@
   "timezone": "",
   "title": "OpenWhisk - Global Metrics",
   "uid": "Kw4jl2iZz",
-  "version": 2
+  "version": 8
 }

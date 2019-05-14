@@ -45,7 +45,6 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
-  "id": null,
   "links": [],
   "panels": [
     {
@@ -430,10 +429,15 @@
   ],
   "schemaVersion": 16,
   "style": "dark",
-  "tags": [],
+  "tags": [
+    "openwhisk"
+  ],
   "templating": {
     "list": []
   },
+  "tags": [
+    "openwhisk"
+  ],
   "time": {
     "from": "now-15m",
     "to": "now"
@@ -466,5 +470,5 @@
   "timezone": "",
   "title": "OpenWhisk - Top Namespaces",
   "uid": "RnvlchiZk",
-  "version": 7
+  "version": 5
 }
