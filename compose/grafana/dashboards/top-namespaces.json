@@ -14,19 +14,19 @@
       "type": "grafana",
       "id": "grafana",
       "name": "Grafana",
-      "version": "5.4.3"
+      "version": "6.1.6"
     },
     {
       "type": "datasource",
       "id": "prometheus",
       "name": "Prometheus",
-      "version": "5.0.0"
+      "version": "1.0.0"
     },
     {
       "type": "panel",
       "id": "table",
       "name": "Table",
-      "version": "5.0.0"
+      "version": ""
     }
   ],
   "annotations": {
@@ -45,6 +45,7 @@
   "editable": true,
   "gnetId": null,
   "graphTooltip": 0,
+  "id": null,
   "links": [],
   "panels": [
     {
@@ -86,7 +87,8 @@
           "decimals": 2,
           "link": true,
           "linkTargetBlank": false,
-          "linkUrl": "d/Oew1lvymk/openwhisk-action-performance-metrics?var-namespace=${__cell}",
+          "linkTooltip": "Metrics related to ${__cell}",
+          "linkUrl": "d/Oew1lvymk/openwhisk-action-performance-metrics?var-namespace=${__cell}&from=${__from}&to=${__to}",
           "mappingType": 1,
           "pattern": "namespace",
           "thresholds": [],
@@ -374,7 +376,7 @@
           "decimals": 2,
           "link": true,
           "linkTooltip": "Action ${__cell} details",
-          "linkUrl": "d/Oew1lvymk/openwhisk-action-performance-metrics?var-namespace=${__cell_2}&var-action=${__cell}",
+          "linkUrl": "d/Oew1lvymk/openwhisk-action-performance-metrics?var-namespace=${__cell_2}&var-action=${__cell}&from=${__from}&to=${__to}",
           "mappingType": 1,
           "pattern": "action",
           "thresholds": [],
@@ -427,7 +429,7 @@
       "type": "table"
     }
   ],
-  "schemaVersion": 16,
+  "schemaVersion": 18,
   "style": "dark",
   "tags": [
     "openwhisk"
@@ -435,9 +437,6 @@
   "templating": {
     "list": []
   },
-  "tags": [
-    "openwhisk"
-  ],
   "time": {
     "from": "now-15m",
     "to": "now"
@@ -470,5 +469,5 @@
   "timezone": "",
   "title": "OpenWhisk - Top Namespaces",
   "uid": "RnvlchiZk",
-  "version": 5
+  "version": 1
 }
