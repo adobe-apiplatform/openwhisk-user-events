@@ -113,6 +113,8 @@ case class Activation(name: String,
     case 3 => statusInternalError
     case x => x.toString
   }
+
+  def isColdStart: Boolean = initTime > 0
 }
 
 object Activation extends DefaultJsonProtocol {

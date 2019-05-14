@@ -38,6 +38,7 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   private val metricCounter = Kamon.counter("openwhisk.userevents.global.metric")
 
   private val statusCounter = Kamon.counter("openwhisk.userevents.global.status")
+  private val coldStartCounter = Kamon.counter("openwhisk.userevents.global.coldStarts")
 
   private val statusSuccess = statusCounter.refine("status" -> Activation.statusSuccess)
   private val statusFailure = statusCounter.refine("status" -> "failure")
@@ -92,6 +93,7 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
     }
 
     if (a.status != Activation.statusSuccess) statusFailure.increment()
+    if (a.isColdStart) coldStartCounter.increment()
   }
 }
 
