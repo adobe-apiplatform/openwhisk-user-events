@@ -46,7 +46,12 @@ object KamonRecorder extends MetricRecorder with KamonMetricNames {
 
   case class KamonMetrics(namespace: String, action: String, kind: String, memory: String, initiator: String) {
     private val activationTags =
-      Map(`actionNamespace` -> namespace, `initiatorNamespace` -> initiator, `actionName` -> action, `kind` -> kind, `memory` -> memory)
+      Map(
+        `actionNamespace` -> namespace,
+        `initiatorNamespace` -> initiator,
+        `actionName` -> action,
+        `kind` -> kind,
+        `memory` -> memory)
     private val tags = Map(`actionNamespace` -> namespace, `initiatorNamespace` -> initiator, `actionName` -> action)
 
     private val activations = Kamon.counter(activationMetric).refine(activationTags)
