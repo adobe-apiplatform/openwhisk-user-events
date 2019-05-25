@@ -65,18 +65,10 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
       consumer.shutdown().futureValue
       sleep(1.second, "sleeping for Kamon reporters to get invoked")
       TestReporter.counter(activationMetric).get.value shouldBe 1
-      TestReporter
-        .counter(activationMetric)
-        .get
-        .tags
-        .find(_._2 == "whisk.system")
-        .size shouldBe 1
-      TestReporter
-        .counter(activationMetric)
-        .get
-        .tags
-        .find(_._2 == "apimgmt/createApi")
-        .size shouldBe 1
+      TestReporter.counter(activationMetric).get.tags("namespace") shouldBe "whisk.system"
+      TestReporter.counter(activationMetric).get.tags("initiator") shouldBe "testNS"
+      TestReporter.counter(activationMetric).get.tags("action") shouldBe "apimgmt/createApi"
+
       TestReporter.counter(statusMetric).get.tags.find(_._2 == Activation.statusDeveloperError).size shouldBe 1
       TestReporter.counter(coldStartMetric).get.value shouldBe 1
       TestReporter.counter(statusMetric).get.value shouldBe 1
@@ -84,27 +76,18 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
       TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
       TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
       TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
-      TestReporter
-        .histogram(durationMetric)
-        .get
-        .tags
-        .find(_._2 == "whisk.system")
-        .size shouldBe 1
-      TestReporter
-        .histogram(durationMetric)
-        .get
-        .tags
-        .find(_._2 == "apimgmt/createApi")
-        .size shouldBe 1
+      TestReporter.histogram(durationMetric).get.tags("namespace") shouldBe "whisk.system"
+      TestReporter.histogram(durationMetric).get.tags("initiator") shouldBe "testNS"
+      TestReporter.histogram(durationMetric).get.tags("action") shouldBe "apimgmt/createApi"
     }
   }
 
-  private def newActivationEvent(name: String, kind: String = "nodejs:6") =
+  private def newActivationEvent(name: String, kind: String = "nodejs:6", initiator: String = "testNS") =
     EventMessage(
       "test",
       Activation(name, 2, 3, 5, 11, kind, false, 256, None),
       "testuser",
-      "testNS",
+      initiator,
       "test",
       Activation.typeName)
 
