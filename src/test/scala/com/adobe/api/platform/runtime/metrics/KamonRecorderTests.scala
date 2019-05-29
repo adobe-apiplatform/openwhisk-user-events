@@ -68,6 +68,8 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
       TestReporter.counter(activationMetric).get.tags("namespace") shouldBe "whisk.system"
       TestReporter.counter(activationMetric).get.tags("initiator") shouldBe "testNS"
       TestReporter.counter(activationMetric).get.tags("action") shouldBe "apimgmt/createApi"
+      TestReporter.counter(activationMetric).get.tags("kind") shouldBe "nodejs:6"
+      TestReporter.counter(activationMetric).get.tags("memory") shouldBe "256"
 
       TestReporter.counter(statusMetric).get.tags.find(_._2 == Activation.statusDeveloperError).size shouldBe 1
       TestReporter.counter(coldStartMetric).get.value shouldBe 1
