@@ -13,7 +13,6 @@ governing permissions and limitations under the License.
 package com.adobe.api.platform.runtime.metrics
 import java.io.StringWriter
 import java.util
-import java.util.concurrent.TimeUnit
 
 import akka.http.scaladsl.model.{HttpEntity, MessageEntity}
 import akka.stream.scaladsl.{Concat, Source}
@@ -96,7 +95,7 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
     }
   }
 
-  private def seconds(timeInMillis: Long) = TimeUnit.MILLISECONDS.toSeconds(timeInMillis)
+  private def seconds(timeInMillis: Long) = timeInMillis.max(0) / 1000.0
 
   private def createSource() =
     Source.combine(createJavaClientSource(), createKamonSource())(Concat(_)).map(ByteString(_))
