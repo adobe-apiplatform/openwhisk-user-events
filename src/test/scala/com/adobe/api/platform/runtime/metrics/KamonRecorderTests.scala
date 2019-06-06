@@ -93,7 +93,9 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
       TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
       TestReporter.histogram(waitTimeMetric).get.distribution.min shouldBe 0
       TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
+      TestReporter.histogram(initTimeMetric).get.distribution.min shouldBe 11
       TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
+      TestReporter.histogram(durationMetric).get.distribution.min shouldBe 3
       TestReporter
         .histogram(durationMetric)
         .get

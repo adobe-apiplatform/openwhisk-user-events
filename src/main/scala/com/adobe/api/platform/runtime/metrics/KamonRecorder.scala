@@ -60,14 +60,16 @@ object KamonRecorder extends MetricRecorder with KamonMetricNames {
 
       if (a.isColdStart) {
         coldStarts.increment()
-        initTime.record(a.initTime.max(0))
+        initTime.record(milliSeconds(a.initTime))
       }
 
       //waitTime may be zero for activations which are part of sequence
-      waitTime.record(a.waitTime.max(0))
-      duration.record(a.duration.max(0))
+      waitTime.record(milliSeconds(a.waitTime))
+      duration.record(milliSeconds(a.duration))
 
       Kamon.counter(statusMetric).refine(tags + ("status" -> a.status)).increment()
     }
+
+    private def milliSeconds(timeInMillis: Long) = timeInMillis.max(0)
   }
 }
