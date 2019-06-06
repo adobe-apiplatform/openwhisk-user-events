@@ -113,11 +113,11 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
     if (a.status != Activation.statusSuccess) statusFailure.increment()
     if (a.isColdStart) {
       coldStartCounter.increment()
-      initTime.record(a.initTime)
+      initTime.record(a.initTime.max(0))
     }
 
-    waitTime.record(a.waitTime)
-    duration.record(a.duration)
+    waitTime.record(a.waitTime.max(0))
+    duration.record(a.duration.max(0))
   }
 
   private def updatedSettings = settings.withProperty(ConsumerConfig.CLIENT_ID_CONFIG, id)

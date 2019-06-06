@@ -91,6 +91,7 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
       TestReporter.counter(statusMetric).get.value shouldBe 1
 
       TestReporter.histogram(waitTimeMetric).get.distribution.count shouldBe 1
+      TestReporter.histogram(waitTimeMetric).get.distribution.min shouldBe 0
       TestReporter.histogram(initTimeMetric).get.distribution.count shouldBe 1
       TestReporter.histogram(durationMetric).get.distribution.count shouldBe 1
       TestReporter
@@ -111,7 +112,7 @@ class KamonRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with Kamo
   private def newActivationEvent(name: String, kind: String = "nodejs:6") =
     EventMessage(
       "test",
-      Activation(name, 2, 3, 5, 11, kind, false, 256, None),
+      Activation(name, 2, 3, -5, 11, kind, false, 256, None),
       "testuser",
       "testNS",
       "test",
