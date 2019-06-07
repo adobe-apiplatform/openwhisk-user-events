@@ -101,5 +101,4 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
       Array("namespace", "action"),
       Array(namespace, action))
 
-
 }
