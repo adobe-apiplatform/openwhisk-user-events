@@ -57,7 +57,7 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
   private def newActivationEvent(name: String, kind: String, memory: String) =
     EventMessage(
       "test",
-      Activation(name, 2, 3, 5, 11, kind, false, memory.toInt, None),
+      Activation(name, 2, 3.millis, 5.millis, 11.millis, kind, false, memory.toInt, None),
       "testuser",
       "testNS",
       "test",
