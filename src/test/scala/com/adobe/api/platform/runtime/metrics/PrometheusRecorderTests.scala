@@ -101,6 +101,6 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
 
   private def histogramSum(name: String) =
     CollectorRegistry.defaultRegistry
-      .getSampleValue(s"${name}_sum", Array("namespace", "action"), Array(namespace, action))
+      .getSampleValue(s"${name}_sum", Array("namespace", "initiator", "action"), Array(namespace, initiator, action))
       .doubleValue()
 }
