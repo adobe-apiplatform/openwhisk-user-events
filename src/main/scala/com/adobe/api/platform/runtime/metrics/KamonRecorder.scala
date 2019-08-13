@@ -28,23 +28,27 @@ trait KamonMetricNames extends MetricNames {
 }
 
 object KamonRecorder extends MetricRecorder with KamonMetricNames {
-  private val metrics = new TrieMap[String, KamonMetrics]
+  private val metrics = new TrieMap[String, ActivationKamonMetrics]
 
   def processEvent(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
   }
 
-  def lookup(activation: Activation, initiatorNamespace: String): KamonMetrics = {
+  def lookup(activation: Activation, initiatorNamespace: String): ActivationKamonMetrics = {
     val name = activation.name
     val kind = activation.kind
     val memory = activation.memory.toString
     metrics.getOrElseUpdate(name, {
       val (namespace, action) = getNamespaceAndActionName(name)
-      KamonMetrics(namespace, action, kind, memory, initiatorNamespace)
+      ActivationKamonMetrics(namespace, action, kind, memory, initiatorNamespace)
     })
   }
 
-  case class KamonMetrics(namespace: String, action: String, kind: String, memory: String, initiator: String) {
+  case class ActivationKamonMetrics(namespace: String,
+                                    action: String,
+                                    kind: String,
+                                    memory: String,
+                                    initiator: String) {
     private val activationTags =
       Map(
         `actionNamespace` -> namespace,

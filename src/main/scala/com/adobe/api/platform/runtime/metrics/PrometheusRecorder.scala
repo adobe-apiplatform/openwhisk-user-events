@@ -39,7 +39,7 @@ trait PrometheusMetricNames extends MetricNames {
 
 case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder with PrometheusExporter {
   import PrometheusRecorder._
-  private val metrics = new TrieMap[String, PrometheusMetrics]
+  private val metrics = new TrieMap[String, ActivationPromMetrics]
 
   def processEvent(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
@@ -48,22 +48,22 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
   override def getReport(): MessageEntity =
     HttpEntity(PrometheusExporter.textV4, createSource())
 
-  private def lookup(activation: Activation, initiatorNamespace: String): PrometheusMetrics = {
+  private def lookup(activation: Activation, initiatorNamespace: String): ActivationPromMetrics = {
     //TODO Unregister unused actions
     val name = activation.name
     val kind = activation.kind
     val memory = activation.memory.toString
     metrics.getOrElseUpdate(name, {
       val (namespace, action) = getNamespaceAndActionName(name)
-      PrometheusMetrics(namespace, action, kind, memory, initiatorNamespace)
+      ActivationPromMetrics(namespace, action, kind, memory, initiatorNamespace)
     })
   }
 
-  case class PrometheusMetrics(namespace: String,
-                               action: String,
-                               kind: String,
-                               memory: String,
-                               initiatorNamespace: String) {
+  case class ActivationPromMetrics(namespace: String,
+                                   action: String,
+                                   kind: String,
+                                   memory: String,
+                                   initiatorNamespace: String) {
     private val activations = activationCounter.labels(namespace, initiatorNamespace, action, kind, memory)
     private val coldStarts = coldStartCounter.labels(namespace, initiatorNamespace, action)
     private val waitTime = waitTimeHisto.labels(namespace, initiatorNamespace, action)
