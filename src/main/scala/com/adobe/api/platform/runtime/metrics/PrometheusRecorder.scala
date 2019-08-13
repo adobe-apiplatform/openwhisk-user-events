@@ -15,6 +15,7 @@ import java.io.StringWriter
 import java.util
 import java.util.concurrent.TimeUnit
 
+import akka.event.slf4j.SLF4JLogging
 import akka.http.scaladsl.model.{HttpEntity, MessageEntity}
 import akka.stream.scaladsl.{Concat, Source}
 import akka.util.ByteString
@@ -35,17 +36,27 @@ trait PrometheusMetricNames extends MetricNames {
   val durationMetric = "openwhisk_action_duration_seconds"
   val statusMetric = "openwhisk_action_status"
   val memoryMetric = "openwhisk_action_memory"
+
+  val concurrentLimitMetric = "openwhisk_action_limit_concurrent_total"
+  val timedLimitMetric = "openwhisk_action_limit_timed_total"
 }
 
-case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder with PrometheusExporter {
+case class PrometheusRecorder(kamon: PrometheusReporter)
+    extends MetricRecorder
+    with PrometheusExporter
+    with SLF4JLogging {
   import PrometheusRecorder._
-  private val metrics = new TrieMap[String, ActivationPromMetrics]
+  private val activationMetrics = new TrieMap[String, ActivationPromMetrics]
+  private val limitMetrics = new TrieMap[String, LimitPromMetrics]
 
   override def processActivation(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
   }
 
-  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = ???
+  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = {
+    val limitMetric = limitMetrics.getOrElseUpdate(initiatorNamespace, LimitPromMetrics(initiatorNamespace))
+    limitMetric.record(metric)
+  }
 
   override def getReport(): MessageEntity =
     HttpEntity(PrometheusExporter.textV4, createSource())
@@ -55,10 +66,23 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
     val name = activation.name
     val kind = activation.kind
     val memory = activation.memory.toString
-    metrics.getOrElseUpdate(name, {
+    activationMetrics.getOrElseUpdate(name, {
       val (namespace, action) = getNamespaceAndActionName(name)
       ActivationPromMetrics(namespace, action, kind, memory, initiatorNamespace)
     })
+  }
+
+  case class LimitPromMetrics(namespace: String) {
+    private val concurrentLimit = concurrentLimitCounter.labels(namespace)
+    private val timedLimit = timedLimitCounter.labels(namespace)
+
+    def record(m: Metric): Unit = {
+      m.metricName match {
+        case "ConcurrentRateLimit" => concurrentLimit.inc()
+        case "TimedRateLimit"      => timedLimit.inc()
+        case x                     => log.warn(s"Unknown limit $x")
+      }
+    }
   }
 
   case class ActivationPromMetrics(namespace: String,
@@ -181,6 +205,15 @@ object PrometheusRecorder extends PrometheusMetricNames {
       actionNamespace,
       initiatorNamespace,
       actionName)
+
+  private val concurrentLimitCounter =
+    counter(concurrentLimitMetric, "a user has exceeded its limit for concurrent invocations", actionNamespace)
+
+  private val timedLimitCounter =
+    counter(
+      timedLimitMetric,
+      "the user has reached its per minute limit for the number of invocations",
+      actionNamespace)
 
   private def counter(name: String, help: String, tags: String*) =
     Counter

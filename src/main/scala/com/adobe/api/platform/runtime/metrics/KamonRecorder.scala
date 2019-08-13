@@ -12,6 +12,7 @@ governing permissions and limitations under the License.
 
 package com.adobe.api.platform.runtime.metrics
 
+import akka.event.slf4j.SLF4JLogging
 import com.adobe.api.platform.runtime.metrics.Activation.getNamespaceAndActionName
 import kamon.Kamon
 import kamon.metric.MeasurementUnit
@@ -25,25 +26,45 @@ trait KamonMetricNames extends MetricNames {
   val initTimeMetric = "openwhisk.action.initTime"
   val durationMetric = "openwhisk.action.duration"
   val statusMetric = "openwhisk.action.status"
+
+  val concurrentLimitMetric = "openwhisk.action.limit.concurrent"
+  val timedLimitMetric = "openwhisk.action.limit.timed"
 }
 
-object KamonRecorder extends MetricRecorder with KamonMetricNames {
-  private val metrics = new TrieMap[String, ActivationKamonMetrics]
+object KamonRecorder extends MetricRecorder with KamonMetricNames with SLF4JLogging {
+  private val activationMetrics = new TrieMap[String, ActivationKamonMetrics]
+  private val limitMetrics = new TrieMap[String, LimitKamonMetrics]
 
   override def processActivation(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
   }
 
-  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = ???
+  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = {
+    val limitMetric = limitMetrics.getOrElseUpdate(initiatorNamespace, LimitKamonMetrics(initiatorNamespace))
+    limitMetric.record(metric)
+  }
 
   def lookup(activation: Activation, initiatorNamespace: String): ActivationKamonMetrics = {
     val name = activation.name
     val kind = activation.kind
     val memory = activation.memory.toString
-    metrics.getOrElseUpdate(name, {
+    activationMetrics.getOrElseUpdate(name, {
       val (namespace, action) = getNamespaceAndActionName(name)
       ActivationKamonMetrics(namespace, action, kind, memory, initiatorNamespace)
     })
+  }
+
+  case class LimitKamonMetrics(namespace: String) {
+    private val concurrentLimit = Kamon.counter(concurrentLimitMetric).refine(`actionNamespace` -> namespace)
+    private val timedLimit = Kamon.counter(timedLimitMetric).refine(`actionNamespace` -> namespace)
+
+    def record(m: Metric): Unit = {
+      m.metricName match {
+        case "ConcurrentRateLimit" => concurrentLimit.increment()
+        case "TimedRateLimit"      => timedLimit.increment()
+        case x                     => log.warn(s"Unknown limit $x")
+      }
+    }
   }
 
   case class ActivationKamonMetrics(namespace: String,
