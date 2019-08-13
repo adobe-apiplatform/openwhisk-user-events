@@ -41,9 +41,11 @@ case class PrometheusRecorder(kamon: PrometheusReporter) extends MetricRecorder 
   import PrometheusRecorder._
   private val metrics = new TrieMap[String, ActivationPromMetrics]
 
-  def processEvent(activation: Activation, initiatorNamespace: String): Unit = {
+  override def processActivation(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
   }
+
+  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = ???
 
   override def getReport(): MessageEntity =
     HttpEntity(PrometheusExporter.textV4, createSource())

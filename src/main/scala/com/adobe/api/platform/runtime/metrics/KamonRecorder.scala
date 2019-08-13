@@ -30,9 +30,11 @@ trait KamonMetricNames extends MetricNames {
 object KamonRecorder extends MetricRecorder with KamonMetricNames {
   private val metrics = new TrieMap[String, ActivationKamonMetrics]
 
-  def processEvent(activation: Activation, initiatorNamespace: String): Unit = {
+  override def processActivation(activation: Activation, initiatorNamespace: String): Unit = {
     lookup(activation, initiatorNamespace).record(activation)
   }
+
+  override def processMetric(metric: Metric, initiatorNamespace: String): Unit = ???
 
   def lookup(activation: Activation, initiatorNamespace: String): ActivationKamonMetrics = {
     val name = activation.name
