@@ -49,19 +49,19 @@ class PrometheusRecorderTests extends KafkaSpecBase with BeforeAndAfterEach with
       sleep(sleepAfterProduce, "sleeping post produce")
       consumer.shutdown().futureValue
       counterTotal(initiatorTest, activationMetric) shouldBe 1
-      counter(initiatorTest,coldStartMetric) shouldBe 1
-      counterStatus(initiatorTest,statusMetric, Activation.statusDeveloperError) shouldBe 1
+      counter(initiatorTest, coldStartMetric) shouldBe 1
+      counterStatus(initiatorTest, statusMetric, Activation.statusDeveloperError) shouldBe 1
 
-      histogramCount(initiatorTest,waitTimeMetric) shouldBe 1
-      histogramSum(initiatorTest,waitTimeMetric) shouldBe (0.03 +- 0.001)
+      histogramCount(initiatorTest, waitTimeMetric) shouldBe 1
+      histogramSum(initiatorTest, waitTimeMetric) shouldBe (0.03 +- 0.001)
 
-      histogramCount(initiatorTest,initTimeMetric) shouldBe 1
-      histogramSum(initiatorTest,initTimeMetric) shouldBe (433.433 +- 0.01)
+      histogramCount(initiatorTest, initTimeMetric) shouldBe 1
+      histogramSum(initiatorTest, initTimeMetric) shouldBe (433.433 +- 0.01)
 
-      histogramCount(initiatorTest,durationMetric) shouldBe 1
-      histogramSum(initiatorTest,durationMetric) shouldBe (1.254 +- 0.01)
+      histogramCount(initiatorTest, durationMetric) shouldBe 1
+      histogramSum(initiatorTest, durationMetric) shouldBe (1.254 +- 0.01)
 
-      gauge(initiatorTest,memoryMetric) shouldBe 1
+      gauge(initiatorTest, memoryMetric) shouldBe 1
 
       // blacklisted namespace should not be tracked
       counterTotal(initiatorGuest, activationMetric) shouldBe null

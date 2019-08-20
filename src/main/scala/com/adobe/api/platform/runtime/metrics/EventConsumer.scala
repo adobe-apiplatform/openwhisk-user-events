@@ -36,9 +36,9 @@ trait MetricRecorder {
   def processMetric(metric: Metric, initiatorNamespace: String): Unit
 }
 
-case class EventConsumer(settings: ConsumerSettings[String, String], recorders: Seq[MetricRecorder], metricConfig: MetricConfig)(
-  implicit system: ActorSystem,
-  materializer: ActorMaterializer) {
+case class EventConsumer(settings: ConsumerSettings[String, String],
+                         recorders: Seq[MetricRecorder],
+                         metricConfig: MetricConfig)(implicit system: ActorSystem, materializer: ActorMaterializer) {
   import EventConsumer._
 
   private implicit val ec: ExecutionContext = system.dispatcher
@@ -89,10 +89,10 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
     EventMessage
       .parse(value)
       .filter { e =>
-          e.namespace match {
-            case x if metricConfig.blacklistedNamespaces.contains(x) => false
-            case _ => true
-          }
+        e.namespace match {
+          case x if metricConfig.blacklistedNamespaces.contains(x) => false
+          case _                                                   => true
+        }
       }
       .map { e =>
         e.eventType match {
