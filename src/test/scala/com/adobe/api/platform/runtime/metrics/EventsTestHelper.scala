@@ -15,8 +15,10 @@ import java.net.ServerSocket
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
+import com.adobe.api.platform.runtime.metrics.OpenWhiskEvents.MetricConfig
 import com.typesafe.config.Config
 import kamon.prometheus.PrometheusReporter
+import pureconfig.loadConfigOrThrow
 
 trait EventsTestHelper {
 
@@ -28,7 +30,8 @@ trait EventsTestHelper {
     val settings = OpenWhiskEvents
       .eventConsumerSettings(OpenWhiskEvents.defaultConsumerConfig(globalConfig))
       .withBootstrapServers(s"localhost:$kport")
-    EventConsumer(settings, Seq(recorder))
+    val metricConfig = loadConfigOrThrow[MetricConfig](globalConfig, "user-events")
+    EventConsumer(settings, Seq(recorder), metricConfig)
   }
 
   protected def freePort(): Int = {

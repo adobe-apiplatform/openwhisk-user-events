@@ -22,6 +22,7 @@ import akka.kafka.scaladsl.Consumer.DrainingControl
 import akka.kafka.{ConsumerSettings, Subscriptions}
 import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.{Keep, Sink}
+import com.adobe.api.platform.runtime.metrics.OpenWhiskEvents.MetricConfig
 import javax.management.ObjectName
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import kamon.Kamon
@@ -35,7 +36,7 @@ trait MetricRecorder {
   def processMetric(metric: Metric, initiatorNamespace: String): Unit
 }
 
-case class EventConsumer(settings: ConsumerSettings[String, String], recorders: Seq[MetricRecorder])(
+case class EventConsumer(settings: ConsumerSettings[String, String], recorders: Seq[MetricRecorder], metricConfig: MetricConfig)(
   implicit system: ActorSystem,
   materializer: ActorMaterializer) {
   import EventConsumer._
@@ -87,6 +88,12 @@ case class EventConsumer(settings: ConsumerSettings[String, String], recorders: 
   private def processEvent(value: String): Unit = {
     EventMessage
       .parse(value)
+      .filter { e =>
+          e.namespace match {
+            case x if metricConfig.blacklistedNamespaces.contains(x) => false
+            case _ => true
+          }
+      }
       .map { e =>
         e.eventType match {
           case Activation.typeName => activationCounter.increment()

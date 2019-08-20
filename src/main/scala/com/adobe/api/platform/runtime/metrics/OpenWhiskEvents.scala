@@ -29,7 +29,7 @@ import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
 
-  case class MetricConfig(port: Int, enableKamon: Boolean)
+  case class MetricConfig(port: Int, enableKamon: Boolean, blacklistedNamespaces: List[String])
 
   def start(config: Config)(implicit system: ActorSystem,
                             materializer: ActorMaterializer): Future[Http.ServerBinding] = {
@@ -42,7 +42,7 @@ object OpenWhiskEvents extends SLF4JLogging {
 
     val prometheusRecorder = PrometheusRecorder(prometheusReporter)
     val recorders = if (metricConfig.enableKamon) Seq(prometheusRecorder, KamonRecorder) else Seq(prometheusRecorder)
-    val eventConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), recorders)
+    val eventConsumer = EventConsumer(eventConsumerSettings(defaultConsumerConfig(config)), recorders, metricConfig)
 
     CoordinatedShutdown(system).addTask(CoordinatedShutdown.PhaseBeforeServiceUnbind, "shutdownConsumer") { () =>
       eventConsumer.shutdown()
