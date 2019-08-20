@@ -29,7 +29,7 @@ import scala.concurrent.Future
 
 object OpenWhiskEvents extends SLF4JLogging {
 
-  case class MetricConfig(port: Int, enableKamon: Boolean, blacklistedNamespaces: List[String])
+  case class MetricConfig(port: Int, enableKamon: Boolean, ignoredNamespaces: List[String])
 
   def start(config: Config)(implicit system: ActorSystem,
                             materializer: ActorMaterializer): Future[Http.ServerBinding] = {

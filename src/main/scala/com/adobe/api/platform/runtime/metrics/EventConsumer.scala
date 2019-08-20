@@ -89,10 +89,7 @@ case class EventConsumer(settings: ConsumerSettings[String, String],
     EventMessage
       .parse(value)
       .filter { e =>
-        e.namespace match {
-          case x if metricConfig.blacklistedNamespaces.contains(x) => false
-          case _                                                   => true
-        }
+        !metricConfig.ignoredNamespaces.contains(e.namespace)
       }
       .map { e =>
         e.eventType match {
